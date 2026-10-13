@@ -1,0 +1,8 @@
+Origin: StoreSwitcher 2 Pro Repo
+Label: StoreSwitcher2
+Suite: stable
+Version: 2.2.0
+Codename: ios
+Architectures: iphoneos-arm64
+Components: main
+Description: Kho lưu trữ chính thức StoreSwitcher 2 Pro cho iOS 15 Rootless (iPhone 6s, Dopamine, Palera1n).

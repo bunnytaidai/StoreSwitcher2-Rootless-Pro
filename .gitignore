@@ -1,0 +1,9 @@
+.DS_Store
+*.swp
+*.o
+.theos/
+_
+__pycache__/
+*.pyc
+tmp/
+*.log

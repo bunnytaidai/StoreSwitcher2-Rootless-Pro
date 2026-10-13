@@ -1,0 +1,153 @@
+#!/bin/sh
+# StoreSwitcher 2 CLI Tool - Dành cho iPhone 6s iOS 15.8.8 Rootless
+# Hỗ trợ tự động hóa, điều khiển từ SSH, Python, AutoTouch, Shortcuts
+# Tích hợp Tut Trick Snapshot 1-Click & Dev Code Ngầm Triệt Tiêu 2FA
+
+CMD_DIR="/var/jb/tmp"
+CONFIG_DIR="/var/jb/var/mobile/Library/StoreSwitcher"
+
+if [ ! -d "/var/jb" ]; then
+  CMD_DIR="/tmp"
+  CONFIG_DIR="/var/mobile/Library/StoreSwitcher"
+fi
+
+mkdir -p "$CMD_DIR"
+mkdir -p "$CONFIG_DIR"
+
+CMD_FILE="$CMD_DIR/storeswitcher_cmd.json"
+STATUS_FILE="$CMD_DIR/storeswitcher_status.json"
+VAULT_FILE="$CONFIG_DIR/vault.json"
+CAPTURED_FILE="$CONFIG_DIR/captured_transactions.json"
+
+show_help() {
+  echo "=========================================================================="
+  echo "  ⚡ StoreSwitcher 2 CLI Tool (iOS 15.8.8 A9 Rootless)"
+  echo "=========================================================================="
+  echo "Lệnh Thao Tác:"
+  echo "  storeswitcher --snapshot [password]    : ⚡ Snapshot tức thì nick hiện tại vào Vault"
+  echo "  storeswitcher --vault                  : Xem toàn bộ nick đã lưu token trong Vault"
+  echo "  storeswitcher --softswap <email> [mode]: Tráo nick ngầm trên RAM (Mode: 0=SK2, 1=SK1, 2=Settings, 3=TestFlight)"
+  echo "  storeswitcher --restore                : Khôi phục nick gốc, tắt cờ Soft Swap"
+  echo "  storeswitcher --verify-pass            : Tự động điền mật khẩu vào popup hiện tại"
+  echo "  storeswitcher --auto-confirm <on|off>  : Bật/tắt tự động bấm Mua/Đăng ký khi mua In-App"
+  echo "  storeswitcher --bypass-reauth <on|off> : Bật/tắt Dev Code ngầm chặn 2FA re-auth"
+  echo "  storeswitcher --captured-api           : Xem gói tin API buy in-app vừa bắt được"
+  echo "  storeswitcher --clear-api              : Xóa lịch sử gói tin API buy in-app"
+  echo "  storeswitcher --open-settings          : Mở thẳng Cài đặt App Store Sandbox"
+  echo "  storeswitcher --open <url_scheme>      : Bắn lệnh mở URL Scheme tùy chỉnh"
+  echo "  storeswitcher --status                 : Xem trạng thái RAM và tiến trình ngầm"
+  echo "=========================================================================="
+}
+
+send_ipc() {
+  ACTION="$1"
+  shift
+  EXTRA="$@"
+
+  cat <<EOF > "$CMD_FILE"
+{
+  "action": "$ACTION",
+  $EXTRA
+  "timestamp": $(date +%s)
+}
+EOF
+
+  # Bắn Darwin Notification thông báo cho tiến trình AppStore / Tweak
+  if which notifyutil >/dev/null 2>&1; then
+    notifyutil -p com.subdiox.storeswitcher.command
+  elif which notify_post >/dev/null 2>&1; then
+    notify_post com.subdiox.storeswitcher.command
+  fi
+
+  sleep 0.4
+  if [ -f "$STATUS_FILE" ]; then
+    cat "$STATUS_FILE"
+    echo ""
+  else
+    echo "{\"status\": \"sent\", \"action\": \"$ACTION\"}"
+  fi
+}
+
+case "$1" in
+  --snapshot)
+    PASS="$2"
+    echo "⚡ [Snapshot] Đang trích xuất Token, DSID, StoreFront của nick hiện tại..."
+    if [ -n "$PASS" ]; then
+      send_ipc "capture_current" "\"password\": \"$PASS\""
+    else
+      send_ipc "capture_current"
+    fi
+    ;;
+  --vault)
+    if [ -f "$VAULT_FILE" ]; then
+      echo "=== DANH SÁCH TÀI KHOẢN TRONG VAULT ==="
+      cat "$VAULT_FILE"
+      echo ""
+    else
+      send_ipc "get_vault"
+    fi
+    ;;
+  --softswap|-s)
+    if [ -z "$2" ]; then
+      echo "Lỗi: Thiếu tham số email. Ví dụ: storeswitcher --softswap nhumotgiotle@gmail.com 0"
+      exit 1
+    fi
+    MODE="${3:-0}"
+    echo "⚡ Đang kích hoạt Soft Swap cho: $2 (Mode: $MODE)"
+    send_ipc "softswap_mode" "\"account\": \"$2\", \"mode\": $MODE"
+    ;;
+  --restore|-r)
+    echo "✓ Đang khôi phục lại nick gốc..."
+    send_ipc "restore"
+    ;;
+  --verify-pass)
+    echo "🔑 Đang kích hoạt tự động điền mật khẩu..."
+    send_ipc "verify_pass"
+    ;;
+  --auto-confirm)
+    if [ "$2" = "off" ]; then
+      echo "Đã tắt Auto-Confirm."
+      send_ipc "auto_confirm" "\"enabled\": false"
+    else
+      echo "Đã bật Auto-Confirm (Tự động bấm Mua/Đăng ký khi nhập pass)."
+      send_ipc "auto_confirm" "\"enabled\": true"
+    fi
+    ;;
+  --bypass-reauth)
+    if [ "$2" = "off" ]; then
+      echo "Đã tắt Dev Code Bypass 2FA."
+      send_ipc "bypass_reauth" "\"enabled\": false"
+    else
+      echo "Đã bật Dev Code Bypass 2FA (Chặn 100% Apple Server Re-auth)."
+      send_ipc "bypass_reauth" "\"enabled\": true"
+    fi
+    ;;
+  --captured-api)
+    if [ -f "$CAPTURED_FILE" ]; then
+      echo "=== CÁC GÓI TIN GIAO DỊCH IN-APP SANDBOX VỪA BẮT ĐƯỢC ==="
+      cat "$CAPTURED_FILE"
+      echo ""
+    else
+      send_ipc "get_captured_api"
+    fi
+    ;;
+  --clear-api)
+    echo "Đang xóa lịch sử API..."
+    send_ipc "clear_captured_api"
+    ;;
+  --open-settings)
+    echo "Đang mở Cài đặt App Store Sandbox..."
+    send_ipc "open_settings_sandbox"
+    ;;
+  --open|-o)
+    URL="${2:-itms-apps://apps.apple.com/account/manage-subscriptions}"
+    echo "Đang mở URL: $URL"
+    send_ipc "open_url" "\"url\": \"$URL\""
+    ;;
+  --status)
+    send_ipc "status"
+    ;;
+  *)
+    show_help
+    ;;
+esac

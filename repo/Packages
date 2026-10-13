@@ -1,0 +1,18 @@
+Package: com.subdiox.storeswitcher2
+Name: StoreSwitcher 2 (iOS 15 Rootless Pro)
+Depends: firmware (>= 15.0), ellekit | mobilesubstrate (>= 0.9.5000), preferenceloader
+Recommends: sqlite3, curl
+Version: 2.2.0
+Architecture: iphoneos-arm64
+Description: Quick Account Switcher, Soft Swap Sandbox, Realtime WebSocket & SQLite Database for App Store on iOS 15.x Rootless (iPhone 6s / Dopamine / Palera1n).
+Maintainer: bunnytaidai <https://github.com/bunnytaidai>
+Author: subdiox & bunnytaidai
+Section: Tweaks
+Tag: purpose::extension, role::user, compatible::ios15
+Icon: https://raw.githubusercontent.com/bunnytaidai/StoreSwitcher2-Rootless-Pro/main/layout/Library/Application%20Support/StoreSwitcher/switcher%402x.png
+Filename: debs/com.subdiox.storeswitcher2_2.2.0_iphoneos-arm64.deb
+Size: 75912
+MD5sum: 9edc890f0cef00d55141c6fc230336f4
+SHA1: 2e5c3c39a2cda96c648d74ef680c6e7e30db9f42
+SHA256: 859ec9f6734ea7c1b45faa68edae183b39e4273d79cd4e33f4b161b4c96db278
+
