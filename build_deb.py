@@ -23,9 +23,19 @@ if sys.platform == "win32":
         pass
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-PKG_NAME = "com.subdiox.storeswitcher2"
-PKG_VERSION = "2.2.0"
-PKG_ARCH = "iphoneos-arm64"
+
+def get_control_field(field_name, default=""):
+    control_path = os.path.join(BASE_DIR, "control")
+    if os.path.exists(control_path):
+        with open(control_path, "r", encoding="utf-8") as f:
+            for line in f:
+                if line.startswith(f"{field_name}:"):
+                    return line.split(":", 1)[1].strip()
+    return default
+
+PKG_NAME = get_control_field("Package", "com.subdiox.storeswitcher2")
+PKG_VERSION = get_control_field("Version", "2.2.1")
+PKG_ARCH = get_control_field("Architecture", "iphoneos-arm64")
 DEB_FILENAME = f"{PKG_NAME}_{PKG_VERSION}_{PKG_ARCH}.deb"
 
 OUTPUT_PACKAGES_DIR = os.path.join(BASE_DIR, "packages")

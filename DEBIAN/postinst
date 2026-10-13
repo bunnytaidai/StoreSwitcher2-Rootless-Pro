@@ -5,7 +5,6 @@ set -e
 # StoreSwitcher 2 Pro - Post-Installation Hook (iOS 15 Rootless)
 # ==============================================================================
 
-# Xác định tiền tố Rootless (/var/jb) nếu đang chạy trên Dopamine / Palera1n
 ROOTLESS_PREFIX=""
 if [ -d "/var/jb" ]; then
     ROOTLESS_PREFIX="/var/jb"
@@ -24,8 +23,8 @@ if [ -f "$CONFIG_DIR/vault.json" ]; then
     chmod 0600 "$CONFIG_DIR/vault.json"
 fi
 
-# Làm mới tiến trình AppStore để nạp Dylib mới ngay lập tức
-killall -9 AppStore 2>/dev/null || true
+# Khởi động lại các tiến trình App Store & StoreKit để nạp hook mới
+killall -9 AppStore StoreKitUIService StoreKitViewService 2>/dev/null || true
 
-echo "✓ [StoreSwitcher 2 Pro] Đã cài đặt thành công cho iOS 15 Rootless!"
+echo "✓ [StoreSwitcher 2 Pro v2.2.1] Đã cài đặt thành công cho iOS 15 Rootless!"
 exit 0

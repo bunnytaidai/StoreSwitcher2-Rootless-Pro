@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 
-# Dọn dẹp tiến trình AppStore trước khi gỡ tweak
-killall -9 AppStore 2>/dev/null || true
+# Dọn dẹp tiến trình AppStore và StoreKit trước khi gỡ tweak
+killall -9 AppStore StoreKitUIService StoreKitViewService 2>/dev/null || true
 echo "✓ [StoreSwitcher 2 Pro] Đang gỡ bỏ an toàn..."
 exit 0
