@@ -2,8 +2,16 @@
     Filter = {
         Bundles = (
             "com.apple.AppStore",
+            "com.apple.StoreKitUIService",
+            "com.apple.ios.StoreKitUIService",
             "com.apple.StoreKit.StoreKitViewService",
-            "com.apple.Preferences"
+            "com.apple.Preferences",
+            "com.apple.TestFlight"
+        );
+        Executables = (
+            "StoreKitUIService",
+            "appstored",
+            "itunesstored"
         );
     };
 }

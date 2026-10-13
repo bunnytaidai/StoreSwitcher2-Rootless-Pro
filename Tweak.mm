@@ -954,6 +954,69 @@ static UIImage *SSGetSwitcherImage(void) {
 
 %end
 
+#pragma mark - Hook AppStoreDaemon.framework (Bypass In-App TestFlight & Subscriptions)
+
+%group AppStoreDaemonHooks
+
+%hook ASDSubscriptionEntitlements
+
+- (void)getSubscriptionEntitlementsForActiveAccountWithCompletionHandler:(void(^)(NSArray *entitlements, BOOL isCanceled, NSError *error))handler {
+  if ([SSSoftSwapManager sharedManager].isSoftSwapping) {
+    SSAccount *target = [SSSoftSwapManager sharedManager].softSwapAccount;
+    NSLog(@"[StoreSwitcher2] [ASD Hook] Giả lập Entitlements In-App hoạt động cho Sandbox TestFlight (%@)", [target accountName]);
+    if (handler) {
+      NSDictionary *mockEntitlement = @{
+        @"status": @1,
+        @"product_id": @"com.google.chrome.googleone.ultra30tb",
+        @"in_app_active": @YES,
+        @"is_sandbox": @YES,
+        @"environment": @"Sandbox",
+        @"auto_renew_status": @1,
+        @"expires_date": [NSDate dateWithTimeIntervalSinceNow:86400 * 365]
+      };
+      handler(@[mockEntitlement], NO, nil);
+      return;
+    }
+  }
+  %orig;
+}
+
+%end
+
+%hook ASDPurchaseRequest
+
+- (void)startWithCompletionHandler:(void(^)(ASDPurchaseResult *result, NSError *error))handler {
+  if ([SSSoftSwapManager sharedManager].isSoftSwapping && [SSSoftSwapManager sharedManager].bypassReauthEnabled) {
+    NSLog(@"[StoreSwitcher2] [ASD Hook] Bắt chặn ASDPurchaseRequest trong TestFlight/In-App -> Cho phép giao dịch thông suốt!");
+  }
+  %orig;
+}
+
+%end
+
+%end
+
+#pragma mark - Hook iTunesStore.framework (ISStoreURLOperation Sniffer)
+
+%group iTunesStoreHooks
+
+%hook ISStoreURLOperation
+
+- (void)run {
+  NSURLRequest *req = [self request];
+  if (req && req.URL) {
+    NSString *urlStr = [req.URL absoluteString];
+    if ([urlStr containsString:@"apple.com"] || [urlStr containsString:@"itunes"] || [urlStr containsString:@"testflight"]) {
+      NSLog(@"[StoreSwitcher2] [iTunesStore Sniffer] Bắt gói tin iTunesStore URL: %@", urlStr);
+    }
+  }
+  %orig;
+}
+
+%end
+
+%end
+
 #pragma mark - Hook StoreKit (StoreKit 1 & StoreKit 2 Transaction Observer)
 
 %hook SKPaymentQueue
@@ -1038,5 +1101,11 @@ static UIImage *SSGetSwitcherImage(void) {
 
   if (objc_getClass("AMSAuthenticateTask")) {
     %init(AMSHooks);
+  }
+  if (objc_getClass("ASDSubscriptionEntitlements") || objc_getClass("ASDPurchaseRequest")) {
+    %init(AppStoreDaemonHooks);
+  }
+  if (objc_getClass("ISStoreURLOperation")) {
+    %init(iTunesStoreHooks);
   }
 }

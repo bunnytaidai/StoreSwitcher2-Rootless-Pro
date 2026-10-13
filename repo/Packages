@@ -11,8 +11,8 @@ Section: Tweaks
 Tag: purpose::extension, role::user, compatible::ios15
 Icon: https://raw.githubusercontent.com/bunnytaidai/StoreSwitcher2-Rootless-Pro/main/layout/Library/Application%20Support/StoreSwitcher/switcher%402x.png
 Filename: debs/com.subdiox.storeswitcher2_2.2.0_iphoneos-arm64.deb
-Size: 75942
-MD5sum: 1f4e10063e098a8eeb5251dc643bba54
-SHA1: acbe0c422bc2087786fdc87197afc53de0ae42fc
-SHA256: 988d02f4437ecea547aa228e82efb3f8e9ba178baba790dc70050b05efb68e55
+Size: 79666
+MD5sum: 66828185766e1b8e31b4116411a937ce
+SHA1: fe4faeeb6749ba95ad2cc891941d016a60923536
+SHA256: b2a0134aeea1b990caf1101c635e907fc1fedc6ec94d371b660570eb92c497f8
 

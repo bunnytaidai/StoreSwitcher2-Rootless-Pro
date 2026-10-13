@@ -114,5 +114,33 @@ typedef NS_ENUM(NSInteger, SSSandboxOpenMode) {
 - (void)startWithAuthenticateResponseBlock:(void(^)(SSAuthenticateResponse *response))block;
 @end
 
+// iTunesStore.framework Private Interfaces
+@interface ISURLOperation : NSOperation
+- (NSURLRequest *)request;
+@end
+
+@interface ISStoreURLOperation : ISURLOperation
+@end
+
+// AppStoreDaemon.framework Private Interfaces (TestFlight Sandbox & In-App Subscriptions)
+@interface ASDSubscriptionEntitlements : NSObject
++ (id)sharedInstance;
+- (void)getSubscriptionEntitlementsForActiveAccountWithCompletionHandler:(void(^)(NSArray *entitlements, BOOL isCanceled, NSError *error))handler;
+@end
+
+@interface ASDPurchaseRequestOptions : NSObject
+@property (nonatomic, copy) NSString *bundleID;
+@property (nonatomic, copy) NSString *buyParameters;
+@end
+
+@interface ASDPurchaseResult : NSObject
+@property (nonatomic, readonly) BOOL success;
+@property (nonatomic, readonly) NSError *error;
+@end
+
+@interface ASDPurchaseRequest : NSObject
+- (void)startWithCompletionHandler:(void(^)(ASDPurchaseResult *result, NSError *error))handler;
+@end
+
 #define kSSSoftSwapStateChangedNotification @"kSSSoftSwapStateChangedNotification"
 #define kSSCommandDarwinNotification "com.subdiox.storeswitcher.command"
