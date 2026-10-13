@@ -61,6 +61,10 @@ typedef NS_ENUM(NSInteger, SSSandboxOpenMode) {
 - (SKUIApplicationController *)applicationController;
 @end
 
+@interface SKPaymentQueue (StoreKit2)
++ (void)showManageSubscriptionsInWindowScene:(id)windowScene completionHandler:(void (^)(NSError *error))completionHandler;
+@end
+
 // Trạm kiểm soát RAM - Soft Swap Manager & Vault
 @interface SSSoftSwapManager : NSObject
 + (instancetype)sharedManager;

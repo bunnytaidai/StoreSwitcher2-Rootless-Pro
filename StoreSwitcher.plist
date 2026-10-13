@@ -1,1 +1,9 @@
-{ Filter = { Bundles = ( "com.apple.AppStore" ); }; }
+{
+    Filter = {
+        Bundles = (
+            "com.apple.AppStore",
+            "com.apple.StoreKit.StoreKitViewService",
+            "com.apple.Preferences"
+        );
+    };
+}

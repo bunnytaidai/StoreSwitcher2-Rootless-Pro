@@ -263,6 +263,25 @@ static void handleDarwinCommand(CFNotificationCenterRef center, void *observer, 
 }
 
 - (void)openManageSubscriptionsInScene:(id)scene account:(SSAccount *)account {
+  if (!account) return;
+  self.softSwapAccount = account;
+  self.isSoftSwapping = YES;
+  
+  if (@available(iOS 15.0, *)) {
+    if (scene && [scene isKindOfClass:[UIWindowScene class]] && [SKPaymentQueue respondsToSelector:@selector(showManageSubscriptionsInWindowScene:completionHandler:)]) {
+      NSLog(@"[StoreSwitcher2] [StoreKit 2] Gọi trực tiếp Native Sheet Quản lý Đăng ký trên WindowScene!");
+      [self showSoftSwapToast:[NSString stringWithFormat:@"⚡ Mở Native StoreKit 2 Sheet cho %@", [account accountName]]];
+      [SKPaymentQueue showManageSubscriptionsInWindowScene:(UIWindowScene *)scene completionHandler:^(NSError * _Nullable error) {
+        if (error) {
+          NSLog(@"[StoreSwitcher2] [StoreKit 2] Sheet báo lỗi: %@ -> Fallback sang URL Scheme", error);
+          [self startSoftSwapWithAccount:account mode:SSSandboxOpenModeStoreKit2 completion:nil];
+        } else {
+          NSLog(@"[StoreSwitcher2] [StoreKit 2] ✓ Đã hiển thị Native Sheet Quản lý Đăng ký thành công!");
+        }
+      }];
+      return;
+    }
+  }
   [self startSoftSwapWithAccount:account mode:SSSandboxOpenModeStoreKit2 completion:nil];
 }
 
@@ -903,6 +922,38 @@ static UIImage *SSGetSwitcherImage(void) {
 
 %end
 
+#pragma mark - Hook AMSAuthenticateTask (AppleMediaServices iOS 15+)
+
+@interface AMSAuthenticateTask : NSObject
+@end
+
+%group AMSHooks
+
+%hook AMSAuthenticateTask
+
+- (id)performAuthentication {
+  if ([SSSoftSwapManager sharedManager].isSoftSwapping && [SSSoftSwapManager sharedManager].bypassReauthEnabled) {
+    SSAccount *target = [SSSoftSwapManager sharedManager].softSwapAccount;
+    NSLog(@"[StoreSwitcher2] [AMS Hook] Bắt chặn AMSAuthenticateTask cho %@ -> Bỏ qua xác minh lại (2FA/OTP)", [target accountName]);
+    Class amsResultClass = objc_getClass("AMSAuthenticateResult");
+    if (amsResultClass) {
+      id result = [[amsResultClass alloc] init];
+      Class amsPromiseClass = objc_getClass("AMSPromise");
+      if (amsPromiseClass && [amsPromiseClass respondsToSelector:@selector(promiseWithResult:)]) {
+        #pragma clang diagnostic push
+        #pragma clang diagnostic ignored "-Warc-performSelector-leaks"
+        return [amsPromiseClass performSelector:@selector(promiseWithResult:) withObject:result];
+        #pragma clang diagnostic pop
+      }
+    }
+  }
+  return %orig;
+}
+
+%end
+
+%end
+
 #pragma mark - Hook StoreKit (StoreKit 1 & StoreKit 2 Transaction Observer)
 
 %hook SKPaymentQueue
@@ -983,5 +1034,9 @@ static UIImage *SSGetSwitcherImage(void) {
     %init(AppStoreAccountViewController = accountVCClass);
   } else {
     %init();
+  }
+
+  if (objc_getClass("AMSAuthenticateTask")) {
+    %init(AMSHooks);
   }
 }
