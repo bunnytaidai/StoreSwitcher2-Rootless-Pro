@@ -3,6 +3,7 @@
 #import "URLSchemeHook.h"
 #import "NetworkPacketHook.h"
 #import "AgentIPCServer.h"
+#import "AgentBeacon.h"
 #import <UIKit/UIKit.h>
 
 @implementation AppAgent
@@ -17,7 +18,10 @@
         [URLSchemeHook installHook];
         [NetworkPacketHook installHook];
 
-        // 2. Chờ UIApplication khởi chạy xong rồi start IPC Server
+        // 2. Báo cáo trạng thái tiêm thật về Tweak StoreSwitcher
+        [AgentBeacon startReportingBeacon];
+
+        // 3. Chờ UIApplication khởi chạy xong rồi start IPC Server
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
             [[AgentIPCServer sharedServer] startServer];
         });

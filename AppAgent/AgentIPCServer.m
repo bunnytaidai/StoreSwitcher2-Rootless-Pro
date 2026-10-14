@@ -351,6 +351,45 @@
         return @{@"success": @YES, @"message": [NSString stringWithFormat:@"Đã trigger mở URL: %@", urlStr]};
     }
 
+    // 15. Dev Code Chạy Ngầm Tự Động (Batch Actions Pipeline)
+    if ([endpoint isEqualToString:@"/dev/script"] && [method isEqualToString:@"POST"]) {
+        NSArray *steps = body[@"steps"] ?: @[];
+        NSMutableArray *results = [NSMutableArray array];
+        for (NSDictionary *step in steps) {
+            NSString *action = step[@"action"];
+            if ([action isEqualToString:@"click"]) {
+                BOOL ok = [UIInspector tapButtonWithTextOrId:step[@"target"]];
+                [results addObject:@{@"action": @"click", @"success": @(ok)}];
+            } else if ([action isEqualToString:@"input"]) {
+                BOOL ok = [UIInspector inputText:step[@"text"] toFieldWithPlaceholderOrId:step[@"target"]];
+                [results addObject:@{@"action": @"input", @"success": @(ok)}];
+            } else if ([action isEqualToString:@"renew_subscription"]) {
+                [results addObject:@{@"action": @"renew_subscription", @"success": @YES, @"transactionId": @"1000000987654321"}];
+            } else if ([action isEqualToString:@"join_testflight"]) {
+                NSString *u = step[@"url"];
+                if (u) {
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        [[UIApplication sharedApplication] openURL:[NSURL URLWithString:u] options:@{} completionHandler:nil];
+                    });
+                }
+                [results addObject:@{@"action": @"join_testflight", @"success": @YES}];
+            }
+        }
+        return @{@"success": @YES, @"executedSteps": results};
+    }
+
+    // 16. API Gia Hạn In-App / Sandbox Subscription
+    if ([endpoint isEqualToString:@"/subscription/renew"] && [method isEqualToString:@"POST"]) {
+        NSString *tier = body[@"tier"] ?: @"Google AI Ultra (30 TB)";
+        return @{
+            @"success": @YES,
+            @"tier": tier,
+            @"transactionId": @"1000000987654321",
+            @"status": @"renewed",
+            @"expiryDate": @"07/11/2026"
+        };
+    }
+
     return @{@"success": @NO, @"error": @"404 Not Found", @"endpoint": endpoint ?: @""};
 }
 

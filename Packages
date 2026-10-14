@@ -14,3 +14,34 @@ MD5sum: 4a8ba705d0d085e6b445d67eaaaaacc2
 SHA1: 1d6924e8d3ecee18560cf8aeea4e2d3afd79b84a
 SHA256: bbfa24611848ee843c2c92690f60456ff5c42b4ad1cf1f5ab8aa49fdf7ce62c8
 
+Package: com.subdiox.storeswitcher2
+Name: StoreSwitcher 2 Pro & AppAgent
+Depends: firmware (>= 11.0), ellekit | mobilesubstrate (>= 0.9.5000)
+Description: Quick Apple ID Switcher, Sandbox In-App Manager, Live URL Sniffer, Objective-C Runtime Inspector & IPC Agent for iOS 11 - 15.8.x.
+Maintainer: bunnytaidai
+Author: bunnytaidai & subdiox
+Section: Tweaks
+Architecture: iphoneos-arm64
+Version: 2.3.1-1+debug
+Installed-Size: 924
+Filename: debs/com.subdiox.storeswitcher2_2.3.1_iphoneos-arm64.deb
+Size: 212014
+MD5sum: a6ecb4d8efd038a314d168571589acf5
+SHA1: d0c9151fede0723333a6bf4c071198cc8ec955a7
+SHA256: 36a638c9ab1c73a62250b36930882830ddb3d8ca86948e6068e53d54a07696d1
+
+Package: com.subdiox.storeswitcher2
+Name: StoreSwitcher 2 Pro & AppAgent
+Depends: firmware (>= 11.0), ellekit | mobilesubstrate (>= 0.9.5000), preferenceloader
+Version: 2.4.0
+Architecture: iphoneos-arm64
+Description: Crane-Style Virtual Containers, Multi Apple ID Switcher with Anti-Leak Daemon Protection, 3D Touch Shortcut, In-App Agent & Settings Integration for iOS 11 - 15.8.x.
+Maintainer: bunnytaidai
+Author: bunnytaidai & subdiox
+Section: Tweaks
+Filename: debs/com.subdiox.storeswitcher2_2.4.0_iphoneos-arm64.deb
+Size: 422798
+MD5sum: 39e52c78497967e731037f9ddefb1a5d
+SHA1: 75c07768d10143966dd8fecae10f4e5603b28296
+SHA256: 7a9e282dca3cc557daaa11ee89ba6d0403518440a3ac51d67c45e8dc5c84a8ba
+

@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>items</key>
+	<array>
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>headerCellClass</key>
+			<string>HBPackageNameHeaderCell</string>
+			<key>title</key>
+			<string>StoreSwitcher 2 Pro</string>
+			<key>footerText</key>
+			<string>Hệ thống chuyển đổi Apple ID siêu tốc, cô lập vùng chứa ảo phong cách Crane và kiểm thử In-App cho iOS 11 - 15.8.x.</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<true/>
+			<key>defaults</key>
+			<string>com.subdiox.storeswitcher</string>
+			<key>key</key>
+			<string>enabled</string>
+			<key>label</key>
+			<string>Kích hoạt StoreSwitcher Pro</string>
+		</dict>
+
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>label</key>
+			<string>7 TRUNG TÂM ĐIỀU KHIỂN &amp; CẤU HÌNH CHUYÊN SÂU</string>
+			<key>footerText</key>
+			<string>Chạm vào từng mục để truy cập 7 phân hệ chuyên sâu: Quản lý vùng chứa ảo, kiểm soát dylib tiêm vào app, dev code runner, sniffer/replay packet, popup in-app sandbox (Ảnh 2), quản lý testflight và bảng log.</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSLinkCell</string>
+			<key>detail</key>
+			<string>SSContainersListController</string>
+			<key>label</key>
+			<string>1. 📦 Danh Sách Vùng Chứa (Containers)</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSLinkCell</string>
+			<key>detail</key>
+			<string>SSInjectedAppsController</string>
+			<key>label</key>
+			<string>2. 🎯 App Tiêm Dylib (AppAgent &amp; In-App)</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSLinkCell</string>
+			<key>detail</key>
+			<string>SSAutoRunnerController</string>
+			<key>label</key>
+			<string>3. ⚡ Tự Động Đổi Nick (Dev Code Runner)</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSLinkCell</string>
+			<key>detail</key>
+			<string>SSPacketReplayerController</string>
+			<key>label</key>
+			<string>4. 📡 Thu Bắt &amp; Replay Packet</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSLinkCell</string>
+			<key>detail</key>
+			<string>SSSubscriptionModalController</string>
+			<key>label</key>
+			<string>6. 💳 Popup Gói Đăng Ký Sandbox (Ảnh 2)</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSLinkCell</string>
+			<key>detail</key>
+			<string>SSTestFlightManagerController</string>
+			<key>label</key>
+			<string>7. ✈️ Quản Lý Link TestFlight (itms-beta)</string>
+		</dict>
+
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>label</key>
+			<string>QUY TẮC BẢO MẬT &amp; HỆ THỐNG (GLOBAL RULES)</string>
+			<key>footerText</key>
+			<string>Bật các quy tắc chống rò rỉ token, cookie và tài khoản giữa các ứng dụng.</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<true/>
+			<key>defaults</key>
+			<string>com.subdiox.storeswitcher</string>
+			<key>key</key>
+			<string>isolateSystemAccounts</string>
+			<key>label</key>
+			<string>Tách biệt tài khoản hệ thống</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<true/>
+			<key>defaults</key>
+			<string>com.subdiox.storeswitcher</string>
+			<key>key</key>
+			<string>preserveSandboxData</string>
+			<key>label</key>
+			<string>Không xóa dữ liệu hộp cát</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<true/>
+			<key>defaults</key>
+			<string>com.subdiox.storeswitcher</string>
+			<key>key</key>
+			<string>killDaemonsOnSwitch</string>
+			<key>label</key>
+			<string>Tắt daemons ngầm (akd, itunesstored)</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>default</key>
+			<true/>
+			<key>defaults</key>
+			<string>com.subdiox.storeswitcher</string>
+			<key>key</key>
+			<string>enable3DTouchShortcut</string>
+			<key>label</key>
+			<string>Nút 'Mở vùng chứa mới' ở menu 3D</string>
+		</dict>
+
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>label</key>
+			<string>5. 📜 BẢNG NHẬT KÝ THỜI GIAN THỰC (LIVE LOG DRAWER)</string>
+			<key>footerText</key>
+			<string>Mặc định thu gọn xuống dưới. Báo cáo trạng thái trực tiếp của tools, các hook, lỗi runtime và thao tác chuyển đổi tài khoản.</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSButtonCell</string>
+			<key>action</key>
+			<string>toggleLogDrawer:</string>
+			<key>label</key>
+			<string>👁 Hiển Thị / Thu Gọn Nhật Ký</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSButtonCell</string>
+			<key>action</key>
+			<string>openLiveLogViewer:</string>
+			<key>label</key>
+			<string>🖥 Xem Nhật Ký Toàn Màn Hình (Live Console)</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSButtonCell</string>
+			<key>action</key>
+			<string>clearLogFile:</string>
+			<key>label</key>
+			<string>🗑 Xóa Sạch Dữ Liệu Nhật Ký</string>
+		</dict>
+
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>footerText</key>
+			<string>© 2026 bunnytaidai &amp; subdiox. Phiên bản tích hợp 5 Tab Pro.</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSTitleValueCell</string>
+			<key>label</key>
+			<string>Phiên bản</string>
+			<key>get</key>
+			<string>versionString</string>
+		</dict>
+	</array>
+	<key>title</key>
+	<string>StoreSwitcher Pro</string>
+</dict>
+</plist>

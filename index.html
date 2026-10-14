@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>⚡ StoreSwitcher 2 Pro & AppAgent Repo</title>
     <style>
         :root {
@@ -207,6 +207,19 @@
             user-select: all;
         }
 
+        .dep-desc {
+            font-size: 13px;
+            color: #b0bec5;
+            line-height: 1.5;
+            margin-bottom: 10px;
+        }
+
+        .dep-note {
+            font-size: 12px;
+            color: #78909c;
+            margin-top: 8px;
+        }
+
         footer {
             margin-top: 24px;
             text-align: center;
@@ -220,7 +233,7 @@
         <div class="header-card">
             <img src="CydiaIcon.png" alt="Logo" class="logo">
             <h1>StoreSwitcher 2 Pro & AppAgent</h1>
-            <p class="desc">Kho lưu trữ APT chính thức hỗ trợ iOS 11 - 15.8.x Rootless (Dopamine/Palera1n) & Rootful trên iPhone 6s A9 trở lên.</p>
+            <p class="desc">Kho lưu trữ APT chính thức hỗ trợ iOS 11 - 15.8.x Rootless (Dopamine/Palera1n) & Rootful trên iPhone 6s A9 trở lên. Phiên bản mới nhất: <strong>v2.4.0</strong>.</p>
             
             <div class="repo-url-box">
                 https://bunnytaidai.github.io/StoreSwitcher2-Rootless-Pro/
@@ -239,8 +252,8 @@
                 <a href="cydia://url/https://cydia.saurik.com/api/share#?source=https://bunnytaidai.github.io/StoreSwitcher2-Rootless-Pro/" class="btn btn-cydia">
                     <span>📦 Thêm vào Cydia</span>
                 </a>
-                <a href="debs/com.subdiox.storeswitcher2_2.3.0_iphoneos-arm64.deb" class="btn btn-download btn-full">
-                    <span>⬇️ Tải file .deb v2.3.0 Cài Đặt Bằng Filza</span>
+                <a href="debs/com.subdiox.storeswitcher2_2.4.0_iphoneos-arm64.deb" class="btn btn-download btn-full">
+                    <span>⬇️ Tải file .deb v2.4.0 Mới Nhất (Filza / Sideload)</span>
                 </a>
             </div>
         </div>
@@ -252,7 +265,7 @@
             <ul class="list-steps">
                 <li>
                     <span class="step-num">1</span>
-                    Bấm vào nút <strong>"Tải file .deb v2.3.0"</strong> ở trên bằng Safari trên iPhone.
+                    Bấm vào nút <strong>"Tải file .deb v2.4.0"</strong> ở trên bằng Safari trên iPhone.
                 </li>
                 <li>
                     <span class="step-num">2</span>
@@ -260,7 +273,7 @@
                 </li>
                 <li>
                     <span class="step-num">3</span>
-                    Chạm vào file <code>com.subdiox.storeswitcher2_2.3.0_iphoneos-arm64.deb</code> trong Filza, chọn <strong>Cài đặt (Install)</strong> ở góc trên bên phải.
+                    Chạm vào file <code>com.subdiox.storeswitcher2_2.4.0_iphoneos-arm64.deb</code> trong Filza, chọn <strong>Cài đặt (Install)</strong> ở góc trên bên phải.
                 </li>
                 <li>
                     <span class="step-num">4</span>
@@ -277,13 +290,13 @@
             <div class="card-title">
                 <span>🛡️ Cấu hình gói phụ thuộc (Dependencies)</span>
             </div>
-            <p style="font-size: 13px; color: #b0bec5; line-height: 1.5; margin-bottom: 10px;">
+            <p class="dep-desc">
                 Gói cài đặt yêu cầu các thành phần nền tảng để đảm bảo tweak hoạt động 100% không lỗi văng app:
             </p>
             <div class="code-box">
                 Depends: firmware (>= 11.0), mobilesubstrate (>= 0.9.5000) | ellekit, preferenceloader
             </div>
-            <p style="font-size: 12px; color: #78909c; margin-top: 8px;">
+            <p class="dep-note">
                 * Khi cài qua Sileo/Saily, hệ thống sẽ tự động đối chiếu và kéo các gói phụ thuộc tương ứng (ElleKit trên Dopamine).
             </p>
         </div>

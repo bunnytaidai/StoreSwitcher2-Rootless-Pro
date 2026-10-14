@@ -2,6 +2,7 @@
     Filter = {
         Bundles = (
             "com.apple.AppStore",
+            "com.apple.springboard",
             "com.apple.Preferences",
             "com.apple.TestFlight",
             "com.apple.StoreKit",

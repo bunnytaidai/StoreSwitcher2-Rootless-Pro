@@ -1,23 +1,23 @@
 Origin: StoreSwitcher Pro Repo
 Label: StoreSwitcher Pro
 Suite: stable
-Version: 2.3.0
+Version: 2.4.0
 Codename: ios
 Architectures: iphoneos-arm64 iphoneos-arm
 Components: main
 Description: Official StoreSwitcher 2 Pro & AppAgent Repository by bunnytaidai
 MD5Sum:
- de3d0503eb11630ac4c03b792035c2ef 678 Packages
- ad6f300dae3cf9319518cae50a070561 477 Packages.gz
- 6cdf8989b77482a3c36a9d83d355ef87 544 Packages.bz2
- be06b6c1da068e32113e36f644c6eb84 552 Packages.xz
+ 785ceb9067623919525d93e4c933f527 2042 Packages
+ 23f2aa10ab872a4a661011e807d4dd66 832 Packages.gz
+ 9152e5db39157ffbc62da9d76737e5d2 982 Packages.bz2
+ e0071eceb16a19b7170ae288607e92a5 888 Packages.xz
 SHA1:
- e71b194a2ff07639184fbd0ab2a1720abf7fb98a 678 Packages
- 6df5421507d07c49fbc33d6671d645b6398dcdbf 477 Packages.gz
- 8700a67c973f9ae10177998bef21593648f2bd2e 544 Packages.bz2
- 72d44dfc7b437e29de97f39ddc1137deecca73fa 552 Packages.xz
+ 6cfc2be5256ae6b878ecaae9b381e0ee469ca804 2042 Packages
+ 7f1c719337ba5f8e666c762bd765214ce873c8c4 832 Packages.gz
+ 6161c31b38ba08816c26bbd2f1af39dee6bb233c 982 Packages.bz2
+ 4cfeb5aa8f87ea242d282227dbdda2eb33316e88 888 Packages.xz
 SHA256:
- d54c5e96ee756f93632236fc81e6f5e368f870d212f9e3448161aa95ad022e8b 678 Packages
- 2f8b449673b951ca4dc2729948e81f6c307fbda041d4853e239b416ceeee03c3 477 Packages.gz
- b7a53507efcc0edb844debee686b3ab2312307da6eb38dd85b7df8136ce30420 544 Packages.bz2
- 149a241196c20c745e9403d17b8cff0dc6a7a689742d6da399c6e10164237055 552 Packages.xz
+ fc1cff3ee6551885709759120e54778497938459910ce4a2f734bf21a7653f55 2042 Packages
+ 38914dcf49f35c0f07d2c83faeff5c419840bf195b7e87b38e09fda987521e60 832 Packages.gz
+ 9a1554ff6de2e39b493221155ac0a27e763bedea4e8f0a9974c64c603386b5da 982 Packages.bz2
+ a81e294260e1a1e4d4ccb6a501f45ce0124fe3af0a3bbd58139114e41121be8f 888 Packages.xz

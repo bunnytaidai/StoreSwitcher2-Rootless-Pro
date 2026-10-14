@@ -1,12 +1,13 @@
 #import "SSViewController.h"
+#import "SSContainerManager.h"
 #import "AppAgentDashboardController.h"
 
 @implementation SSViewController
-@synthesize tableViewController;
-@synthesize accounts;
+@synthesize tableViewController = _tableViewController;
+@synthesize accounts = _accounts;
 
 - (UINavigationController *)init {
-  UITableViewController *contentViewController = [[UITableViewController alloc] initWithStyle:UITableViewStyleGrouped];
+  UITableViewController *contentViewController = [[UITableViewController alloc] initWithStyle:UITableViewStyleInsetGrouped];
   SSViewController *viewController = [super initWithRootViewController:contentViewController];
   [viewController setTableViewController:contentViewController];
   [[contentViewController tableView] setDelegate:viewController];
@@ -18,10 +19,12 @@
 
 - (void)viewWillAppear:(BOOL)animated {
   [super viewWillAppear:animated];
-  [[self tableViewController] setTitle:@"Accounts"];
+  [[NSBundle bundleWithPath:@"/System/Library/PrivateFrameworks/StoreServices.framework"] load];
+  [[self tableViewController] setTitle:@"StoreSwitcher Pro"];
+  
   UIBarButtonItem *dismissButton =
     [[UIBarButtonItem alloc]
-      initWithBarButtonSystemItem:UIBarButtonSystemItemCancel
+      initWithBarButtonSystemItem:UIBarButtonSystemItemDone
       target:self
       action:@selector(dismissAnimated)
     ];
@@ -34,211 +37,372 @@
       action:@selector(openAppAgentDashboard)
     ];
 
+  UIBarButtonItem *addAccountBtn =
+    [[UIBarButtonItem alloc]
+      initWithTitle:@"➕ Thêm Nick"
+      style:UIBarButtonItemStyleDone
+      target:self
+      action:@selector(promptAddNewAppleID)
+    ];
+
   [[[self tableViewController] navigationItem] setLeftBarButtonItems:@[dismissButton, agentButton]];
-  [[[self tableViewController] navigationItem] setRightBarButtonItem: [[self tableViewController] editButtonItem]];
-  NSMutableArray *allAccounts = [[[objc_getClass("SSAccountStore") defaultStore] accounts] mutableCopy];
-  NSIndexSet *localAccountIndexSet = [allAccounts indexesOfObjectsPassingTest:^BOOL(id object, NSUInteger index, BOOL *stop) {
-    SSAccount *account = (SSAccount *)object;
-    return [account isLocalAccount];
-  }];
-  [allAccounts removeObjectsAtIndexes:localAccountIndexSet];
-  [self setAccounts:allAccounts];
+  [[[self tableViewController] navigationItem] setRightBarButtonItems:@[addAccountBtn]];
+
+  [self reloadAllData];
+}
+
+- (void)reloadAllData {
+  [[SSContainerManager sharedManager] loadSettings];
+  [[SSContainerManager sharedManager] syncAccountsFromSystem];
+
+  // Đồng bộ accounts từ SSAccountStore
+  Class storeClass = objc_getClass("SSAccountStore");
+  if (storeClass) {
+    SSAccountStore *store = [storeClass defaultStore];
+    NSMutableArray *allAccounts = [[store accounts] mutableCopy];
+    NSIndexSet *localAccountIndexSet = [allAccounts indexesOfObjectsPassingTest:^BOOL(id object, NSUInteger index, BOOL *stop) {
+      SSAccount *account = (SSAccount *)object;
+      return [account isLocalAccount];
+    }];
+    [allAccounts removeObjectsAtIndexes:localAccountIndexSet];
+    [self setAccounts:allAccounts];
+  }
+
+  [[[self tableViewController] tableView] reloadData];
 }
 
 - (void)dismissAnimated {
   [self dismissViewControllerAnimated:YES completion:nil];
-  return;
 }
 
-- (NSString *)countryCodeForAccount:(SSAccount *)account {
-  NSString *frontIdentifier = [account storeFrontIdentifier];
-  NSString *internalCountryCode = [[[[frontIdentifier componentsSeparatedByString:@","] firstObject] componentsSeparatedByString:@"-"] firstObject];
-  NSDictionary *countryDict = @{
-    @"143563": @"Algeria (DZ)",
-    @"143564": @"Angola (AO)",
-    @"143538": @"Anguilla (AI)",
-    @"143540": @"Antigua & Barbuda (AG)",
-    @"143505": @"Argentina (AR)",
-    @"143524": @"Armenia (AM)",
-    @"143460": @"Australia (AU)",
-    @"143445": @"Austria (AT)",
-    @"143568": @"Azerbaijan (AZ)",
-    @"143559": @"Bahrain (BH)",
-    @"143490": @"Bangladesh (BD)",
-    @"143541": @"Barbados (BB)",
-    @"143565": @"Belarus (BY)",
-    @"143446": @"Belgium (BE)",
-    @"143555": @"Belize (BZ)",
-    @"143542": @"Bermuda (BM)",
-    @"143556": @"Bolivia (BO)",
-    @"143525": @"Botswana (BW)",
-    @"143503": @"Brazil (BR)",
-    @"143543": @"British Virgin Islands (VG)",
-    @"143560": @"Brunei (BN)",
-    @"143526": @"Bulgaria (BG)",
-    @"143455": @"Canada (CA)",
-    @"143544": @"Cayman Islands (KY)",
-    @"143483": @"Chile (CL)",
-    @"143465": @"China (CN)",
-    @"143501": @"Colombia (CO)",
-    @"143495": @"Costa Rica (CR)",
-    @"143527": @"Cote d'Ivoire (CI)",
-    @"143494": @"Croatia (HR)",
-    @"143557": @"Cyprus (CY)",
-    @"143489": @"Czech Republic (CZ)",
-    @"143458": @"Denmark (DK)",
-    @"143545": @"Dominica (DM)",
-    @"143508": @"Dominican Rep. (DO)",
-    @"143509": @"Ecuador (EC)",
-    @"143516": @"Egypt (EG)",
-    @"143506": @"El Salvador (SV)",
-    @"143518": @"Estonia (EE)",
-    @"143447": @"Finland (FI)",
-    @"143442": @"France (FR)",
-    @"143443": @"Germany (DE)",
-    @"143573": @"Ghana (GH)",
-    @"143448": @"Greece (GR)",
-    @"143546": @"Grenada (GD)",
-    @"143504": @"Guatemala (GT)",
-    @"143553": @"Guyana (GY)",
-    @"143510": @"Honduras (HN)",
-    @"143463": @"Hong Kong (HK)",
-    @"143482": @"Hungary (HU)",
-    @"143558": @"Iceland (IS)",
-    @"143467": @"India (IN)",
-    @"143476": @"Indonesia (ID)",
-    @"143449": @"Ireland (IE)",
-    @"143491": @"Israel (IL)",
-    @"143450": @"Italy (IT)",
-    @"143511": @"Jamaica (JM)",
-    @"143462": @"Japan (JP)",
-    @"143528": @"Jordan (JO)",
-    @"143517": @"Kazakstan (KZ)",
-    @"143529": @"Kenya (KE)",
-    @"143466": @"Korea, Republic Of (KR)",
-    @"143493": @"Kuwait (KW)",
-    @"143519": @"Latvia (LV)",
-    @"143497": @"Lebanon (LB)",
-    @"143522": @"Liechtenstein (LI)",
-    @"143520": @"Lithuania (LT)",
-    @"143451": @"Luxembourg (LU)",
-    @"143515": @"Macau (MO)",
-    @"143530": @"Macedonia (MK)",
-    @"143531": @"Madagascar (MG)",
-    @"143473": @"Malaysia (MY)",
-    @"143488": @"Maldives (MV)",
-    @"143532": @"Mali (ML)",
-    @"143521": @"Malta (MT)",
-    @"143533": @"Mauritius (MU)",
-    @"143468": @"Mexico (MX)",
-    @"143523": @"Moldova, Republic Of (MD)",
-    @"143547": @"Montserrat (MS)",
-    @"143484": @"Nepal (NP)",
-    @"143452": @"Netherlands (NL)",
-    @"143461": @"New Zealand (NZ)",
-    @"143512": @"Nicaragua (NI)",
-    @"143534": @"Niger (NE)",
-    @"143561": @"Nigeria (NG)",
-    @"143457": @"Norway (NO)",
-    @"143562": @"Oman (OM)",
-    @"143477": @"Pakistan (PK)",
-    @"143485": @"Panama (PA)",
-    @"143513": @"Paraguay (PY)",
-    @"143507": @"Peru (PE)",
-    @"143474": @"Philippines (PH)",
-    @"143478": @"Poland (PL)",
-    @"143453": @"Portugal (PT)",
-    @"143498": @"Qatar (QA)",
-    @"143487": @"Romania (RO)",
-    @"143469": @"Russia (RU)",
-    @"143479": @"Saudi Arabia (SA)",
-    @"143535": @"Senegal (SN)",
-    @"143500": @"Serbia (RS)",
-    @"143464": @"Singapore (SG)",
-    @"143496": @"Slovakia (SK)",
-    @"143499": @"Slovenia (SI)",
-    @"143472": @"South Africa (ZA)",
-    @"143454": @"Spain (ES)",
-    @"143486": @"Sri Lanka (LK)",
-    @"143548": @"St. Kitts & Nevis (KN)",
-    @"143549": @"St. Lucia (LC)",
-    @"143550": @"St. Vincent & The Grenadines (VC)",
-    @"143554": @"Suriname (SR)",
-    @"143456": @"Sweden (SE)",
-    @"143459": @"Switzerland (CH)",
-    @"143470": @"Taiwan (TW)",
-    @"143572": @"Tanzania (TZ)",
-    @"143475": @"Thailand (TH)",
-    @"143539": @"The Bahamas (BS)",
-    @"143551": @"Trinidad & Tobago (TT)",
-    @"143536": @"Tunisia (TN)",
-    @"143480": @"Turkey (TR)",
-    @"143552": @"Turks & Caicos (TC)",
-    @"143537": @"Uganda (UG)",
-    @"143492": @"Ukraine (UA)",
-    @"143481": @"United Arab Emirates (AE)",
-    @"143444": @"United Kingdom (UK)",
-    @"143441": @"United States (US)",
-    @"143514": @"Uruguay (UY)",
-    @"143566": @"Uzbekistan (UZ)",
-    @"143502": @"Venezuela (VE)",
-    @"143471": @"Vietnam (VN)",
-    @"143571": @"Yemen (YE)"
-  };
-  NSString *countryCode = countryDict[internalCountryCode];
-  if (!countryCode) {
-    countryCode = [NSString stringWithFormat: @"Unknown Country [%@]", internalCountryCode];
+#pragma mark - Table View Data Source
+
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
+  return 4;
+}
+
+- (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section {
+  if (section == 0) {
+    return @"⭐ TÀI KHOẢN ĐANG HOẠT ĐỘNG (ACTIVE)";
+  } else if (section == 1) {
+    return @"➕ THÊM TÀI KHOẢN MỚI (KHÔNG MẤT NICK CŨ)";
+  } else if (section == 2) {
+    return @"👥 DANH SÁCH TÀI KHOẢN APPLE ID ĐÃ LƯU (ĐỔI 1 CHẠM)";
+  } else {
+    return @"📦 VÙNG CHỨA ẢO (CRANE CONTAINERS)";
   }
-  return countryCode;
+}
+
+- (NSString *)tableView:(UITableView *)tableView titleForFooterInSection:(NSInteger)section {
+  if (section == 0) {
+    NSString *activeID = [SSContainerManager sharedManager].activeAppleID;
+    if (activeID.length > 0) {
+      return [NSString stringWithFormat:@"Đang kích hoạt: %@. Mọi giao dịch In-App và tải app sẽ gắn liền với nick này.", activeID];
+    }
+    return @"Chưa có tài khoản Apple ID nào đăng nhập trên thiết bị.";
+  } else if (section == 1) {
+    return @"Bấm nút bên trên để lưu nick hiện tại và đăng nhập thêm nick mới mà KHÔNG bị đăng xuất, không làm mất token.";
+  } else if (section == 2) {
+    return @"Chạm vào bất kỳ tài khoản nào để chuyển đổi ngay lập tức (không bắt nhập OTP, 2FA hay mật khẩu). Vuốt sang trái để xóa khỏi danh sách.";
+  } else {
+    return @"Quản lý cô lập dữ liệu theo từng vùng chứa. Chuyển vùng chứa sẽ tự động liên kết với Apple ID tương ứng.";
+  }
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
-  return [accounts count];
+  if (section == 0) {
+    return 1;
+  } else if (section == 1) {
+    return 1; // Nút thêm tài khoản
+  } else if (section == 2) {
+    NSArray *vault = [SSContainerManager sharedManager].savedAccounts;
+    return vault.count > 0 ? vault.count : 1;
+  } else {
+    return [[SSContainerManager sharedManager].containers count] + 1; // +1 cho nút Tạo vùng chứa mới
+  }
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
   static NSString *cellIdentifier = @"SSTableViewCell";
   SSTableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:cellIdentifier forIndexPath:indexPath];
-  SSAccount *account = accounts[indexPath.row];
-  if ([account firstName]) {
-    [[cell textLabel] setText:[NSString stringWithFormat:@"%@ %@", [account firstName], [account lastName]]];
-    [[cell detailTextLabel] setText:[NSString stringWithFormat:@"%@ - %@", [account accountName], [self countryCodeForAccount:account]]];
+  cell.accessoryType = UITableViewCellAccessoryNone;
+
+  if (indexPath.section == 0) {
+    // Tài khoản đang hoạt động
+    NSString *activeID = [SSContainerManager sharedManager].activeAppleID;
+    if (activeID.length > 0) {
+      [[cell textLabel] setText:activeID];
+      SSContainer *activeC = [[SSContainerManager sharedManager] activeContainer];
+      NSString *sub = [NSString stringWithFormat:@"Vùng chứa: %@ • DSID: %@", activeC.name, activeC.dsid.length > 0 ? activeC.dsid : @"Đã xác thực"];
+      [[cell detailTextLabel] setText:sub];
+      cell.accessoryType = UITableViewCellAccessoryCheckmark;
+    } else {
+      [[cell textLabel] setText:@"✨ Chưa đăng nhập Apple ID"];
+      [[cell detailTextLabel] setText:@"Chạm vào mục bên dưới để đăng nhập nick mới"];
+    }
+  } else if (indexPath.section == 1) {
+    // Nút thêm tài khoản
+    [[cell textLabel] setText:@"➕ Đăng Nhập Thêm Tài Khoản Apple ID"];
+    [[cell detailTextLabel] setText:@"Lưu nick hiện tại & hiển thị đăng nhập thêm nick"];
+    cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
+  } else if (indexPath.section == 2) {
+    // Danh sách tài khoản đã lưu
+    NSArray<SSSavedAccount *> *vault = [SSContainerManager sharedManager].savedAccounts;
+    if (vault.count == 0) {
+      [[cell textLabel] setText:@"Chưa có tài khoản nào được lưu trong kho"];
+      [[cell detailTextLabel] setText:@"Đăng nhập tài khoản để tự động lưu vĩnh viễn"];
+    } else {
+      SSSavedAccount *acc = vault[indexPath.row];
+      [[cell textLabel] setText:acc.appleID];
+      
+      NSString *status = @"";
+      if ([acc.appleID isEqualToString:[SSContainerManager sharedManager].activeAppleID]) {
+        status = @"⭐ Đang sử dụng";
+        cell.accessoryType = UITableViewCellAccessoryCheckmark;
+      } else {
+        status = @"Sẵn sàng đổi";
+        cell.accessoryType = UITableViewCellAccessoryNone;
+      }
+      NSString *sub = [NSString stringWithFormat:@"%@ • DSID: %@", status, acc.dsid.length > 0 ? acc.dsid : @"N/A"];
+      [[cell detailTextLabel] setText:sub];
+    }
   } else {
-    [[cell textLabel] setText:[account accountName]];
-    [[cell detailTextLabel] setText:[self countryCodeForAccount:account]];
+    // Vùng chứa ảo
+    NSArray<SSContainer *> *containers = [SSContainerManager sharedManager].containers;
+    if (indexPath.row < containers.count) {
+      SSContainer *c = containers[indexPath.row];
+      BOOL isActive = [c.identifier isEqualToString:[SSContainerManager sharedManager].activeContainerID];
+      
+      NSString *title = c.name;
+      if (c.isDefault) {
+        title = [NSString stringWithFormat:@"%@ (Mặc định)", c.name];
+      }
+      [[cell textLabel] setText:title];
+
+      NSString *sub = c.appleID.length > 0 ? [NSString stringWithFormat:@"Apple ID: %@", c.appleID] : @"✨ Vùng chứa sạch";
+      [[cell detailTextLabel] setText:sub];
+
+      if (isActive) {
+        cell.accessoryType = UITableViewCellAccessoryCheckmark;
+      }
+    } else {
+      // Dòng cuối: Tạo vùng chứa mới
+      [[cell textLabel] setText:@"➕ Tạo Vùng Chứa Ảo Mới (Crane)"];
+      [[cell detailTextLabel] setText:@"Tách biệt sandbox và tài khoản"];
+      cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
+    }
   }
-  if ([account isActive]) {
-    [cell setAccessoryType:UITableViewCellAccessoryCheckmark];
-  }
+
   return cell;
 }
 
+#pragma mark - Table View Delegate
+
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
   [tableView deselectRowAtIndexPath:indexPath animated:YES];
-  SSAccount *account = accounts[indexPath.row];
-  //[[objc_getClass("SSAccountStore") defaultStore] setActiveAccount:account];
-  [account setActive:YES];
-  [[objc_getClass("SSAccountStore") defaultStore] saveAccount:account verifyCredentials:NO error:nil];
-  [[objc_getClass("SSDevice") currentDevice] reloadStoreFrontIdentifier];
-  [[[objc_getClass("SKUIClientContext") defaultContext] applicationController] _resetUserInterfaceAfterStoreFrontChange];
-  [self dismissAnimated];
+
+  if (indexPath.section == 0) {
+    // Chạm tài khoản đang hoạt động -> Không cần đổi
+    return;
+  } else if (indexPath.section == 1) {
+    // Bấm đăng nhập thêm Apple ID mới
+    [self promptAddNewAppleID];
+  } else if (indexPath.section == 2) {
+    // Đổi Apple ID 1-chạm
+    NSArray<SSSavedAccount *> *vault = [SSContainerManager sharedManager].savedAccounts;
+    if (indexPath.row < vault.count) {
+      SSSavedAccount *target = vault[indexPath.row];
+      [self executeAccountSwitchToAppleID:target.appleID];
+    }
+  } else {
+    // Quản lý vùng chứa
+    NSArray<SSContainer *> *containers = [SSContainerManager sharedManager].containers;
+    if (indexPath.row < containers.count) {
+      SSContainer *selected = containers[indexPath.row];
+      [[SSContainerManager sharedManager] switchToContainer:selected error:nil];
+      
+      UIImpactFeedbackGenerator *feedback = [[UIImpactFeedbackGenerator alloc] initWithStyle:UIImpactFeedbackStyleHeavy];
+      [feedback impactOccurred];
+
+      [self refreshStoreFrontAndDismiss];
+    } else {
+      [self promptCreateNewContainer];
+    }
+  }
 }
 
-- (UITableViewCellEditingStyle)tableView:(UITableView *)tableView editingStyleForRowAtIndexPath:(NSIndexPath *)indexPath {
-  SSAccount *account = accounts[indexPath.row];
-  if (tableView.editing && ![account isActive]) {
-    return UITableViewCellEditingStyleDelete;
+- (BOOL)tableView:(UITableView *)tableView canEditRowAtIndexPath:(NSIndexPath *)indexPath {
+  if (indexPath.section == 2) {
+    NSArray<SSSavedAccount *> *vault = [SSContainerManager sharedManager].savedAccounts;
+    if (indexPath.row < vault.count) {
+      SSSavedAccount *acc = vault[indexPath.row];
+      return ![acc.appleID isEqualToString:[SSContainerManager sharedManager].activeAppleID];
+    }
+  } else if (indexPath.section == 3) {
+    NSArray<SSContainer *> *containers = [SSContainerManager sharedManager].containers;
+    if (indexPath.row < containers.count) {
+      SSContainer *c = containers[indexPath.row];
+      return !c.isDefault && ![c.identifier isEqualToString:[SSContainerManager sharedManager].activeContainerID];
+    }
   }
-  return UITableViewCellEditingStyleNone;
+  return NO;
 }
 
 - (void)tableView:(UITableView *)tableView commitEditingStyle:(UITableViewCellEditingStyle)editingStyle forRowAtIndexPath:(NSIndexPath *)indexPath {
-  SSAccount *account = accounts[indexPath.row];
-  if (![account isActive]) {
-    [[objc_getClass("SSAccountStore") defaultStore] removeAccount:account error:nil];
-    [accounts removeObjectAtIndex:indexPath.row];
-    [tableView reloadData];
+  if (editingStyle == UITableViewCellEditingStyleDelete) {
+    if (indexPath.section == 2) {
+      NSArray<SSSavedAccount *> *vault = [SSContainerManager sharedManager].savedAccounts;
+      if (indexPath.row < vault.count) {
+        SSSavedAccount *acc = vault[indexPath.row];
+        [[SSContainerManager sharedManager] deleteAccountFromVault:acc.appleID];
+        [tableView reloadData];
+      }
+    } else if (indexPath.section == 3) {
+      NSArray<SSContainer *> *containers = [SSContainerManager sharedManager].containers;
+      if (indexPath.row < containers.count) {
+        SSContainer *c = containers[indexPath.row];
+        [[SSContainerManager sharedManager] deleteContainer:c];
+        [tableView reloadData];
+      }
+    }
   }
+}
+
+#pragma mark - Thực thi Đổi Tài Khoản & Làm Mới Giao Diện
+
+- (void)executeAccountSwitchToAppleID:(NSString *)appleID {
+  BOOL success = [[SSContainerManager sharedManager] switchToAccountWithAppleID:appleID error:nil];
+  if (success) {
+    UIImpactFeedbackGenerator *feedback = [[UIImpactFeedbackGenerator alloc] initWithStyle:UIImpactFeedbackStyleHeavy];
+    [feedback impactOccurred];
+
+    [self refreshStoreFrontAndDismiss];
+  } else {
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Chưa Đồng Bộ" 
+                                                                   message:[NSString stringWithFormat:@"Tài khoản '%@' chưa có phiên xác thực trong hệ thống. Hãy bấm 'Đăng Nhập Thêm Tài Khoản' để nạp phiên.", appleID] 
+                                                            preferredStyle:UIAlertControllerStyleAlert];
+    [alert addAction:[UIAlertAction actionWithTitle:@"Đồng Ý" style:UIAlertActionStyleDefault handler:nil]];
+    [self presentViewController:alert animated:YES completion:nil];
+  }
+}
+
+- (void)refreshStoreFrontAndDismiss {
+  Class clientClass = objc_getClass("SKUIClientContext");
+  if (clientClass) {
+    id ctx = [clientClass defaultContext];
+    if (ctx && [ctx respondsToSelector:@selector(applicationController)]) {
+      id appCtrl = [ctx applicationController];
+      if (appCtrl && [appCtrl respondsToSelector:@selector(_resetUserInterfaceAfterStoreFrontChange)]) {
+        [appCtrl _resetUserInterfaceAfterStoreFrontChange];
+      }
+    }
+  }
+  [self dismissAnimated];
+}
+
+#pragma mark - Đăng Nhập Thêm Tài Khoản Mới (Không Mất Nick Cũ)
+
+- (void)promptAddNewAppleID {
+  // 1. Snapshot lưu giữ ngay tài khoản hiện tại vào Vault
+  [[SSContainerManager sharedManager] syncAccountsFromSystem];
+
+  UIAlertController *sheet = [UIAlertController alertControllerWithTitle:@"➕ Đăng Nhập Thêm Apple ID" 
+                                                                 message:@"Tài khoản hiện tại đã được sao lưu vào kho (không bị đăng xuất, không mất token).\nBạn muốn tiến hành đăng nhập theo phương thức nào?" 
+                                                          preferredStyle:UIAlertControllerStyleActionSheet];
+
+  UIAlertAction *sysAuthAction = [UIAlertAction actionWithTitle:@"🔐 Mở Đăng Nhập Hệ Thống (Khuyên dùng)" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
+    [self triggerSystemSignInSheet];
+  }];
+
+  UIAlertAction *manualAction = [UIAlertAction actionWithTitle:@"✍️ Nhập Nhanh Email Tài Khoản" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
+    [self promptManualAccountEntry];
+  }];
+
+  UIAlertAction *cancelAction = [UIAlertAction actionWithTitle:@"Hủy" style:UIAlertActionStyleCancel handler:nil];
+
+  [sheet addAction:sysAuthAction];
+  [sheet addAction:manualAction];
+  [sheet addAction:cancelAction];
+
+  [self presentViewController:sheet animated:YES completion:nil];
+}
+
+- (void)triggerSystemSignInSheet {
+  [[NSBundle bundleWithPath:@"/System/Library/PrivateFrameworks/StoreServices.framework"] load];
+  Class authContextClass = objc_getClass("SSMutableAuthenticationContext");
+  Class authReqClass = objc_getClass("SSAuthenticateRequest");
+
+  if (authContextClass && authReqClass) {
+    id context = [[authContextClass alloc] init];
+    if ([context respondsToSelector:@selector(setPromptStyle:)]) {
+      [context setPromptStyle:1]; // 1 = Sign in prompt
+    }
+    if ([context respondsToSelector:@selector(setCanCreateNewAccount:)]) {
+      [context setCanCreateNewAccount:YES];
+    }
+
+    id request = [[authReqClass alloc] initWithAuthenticationContext:context];
+    [request startWithAuthenticateResponseBlock:^(id response) {
+      dispatch_async(dispatch_get_main_queue(), ^{
+        NSLog(@"[StoreSwitcher] Kết quả đăng nhập thêm tài khoản: %@", response);
+        [[SSContainerManager sharedManager] syncAccountsFromSystem];
+        [self reloadAllData];
+        [self refreshStoreFrontAndDismiss];
+      });
+    }];
+  } else {
+    // Fallback: Mở trang tài khoản của App Store
+    [[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"https://apps.apple.com/account"] options:@{} completionHandler:nil];
+  }
+}
+
+- (void)promptManualAccountEntry {
+  UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Thêm Email Apple ID" 
+                                                                 message:@"Nhập địa chỉ email Apple ID để ghi nhận vào kho lưu trữ:" 
+                                                          preferredStyle:UIAlertControllerStyleAlert];
+
+  [alert addTextFieldWithConfigurationHandler:^(UITextField *textField) {
+    textField.placeholder = @"example@icloud.com";
+    textField.keyboardType = UIKeyboardTypeEmailAddress;
+  }];
+
+  UIAlertAction *cancelAction = [UIAlertAction actionWithTitle:@"Hủy" style:UIAlertActionStyleCancel handler:nil];
+  UIAlertAction *saveAction = [UIAlertAction actionWithTitle:@"Lưu Vào Kho" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
+    NSString *email = alert.textFields.firstObject.text;
+    if (email.length > 0) {
+      [[SSContainerManager sharedManager] saveAccountToVault:email dsid:@"" altDSID:@"" storeFront:@""];
+      [self reloadAllData];
+    }
+  }];
+
+  [alert addAction:cancelAction];
+  [alert addAction:saveAction];
+  [self presentViewController:alert animated:YES completion:nil];
+}
+
+#pragma mark - Tạo Vùng Chứa Mới
+
+- (void)promptCreateNewContainer {
+  UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"📦 Tạo Vùng Chứa Mới" 
+                                                                 message:@"Nhập tên vùng chứa mới để tách biệt dữ liệu hộp cát:" 
+                                                          preferredStyle:UIAlertControllerStyleAlert];
+
+  [alert addTextFieldWithConfigurationHandler:^(UITextField *textField) {
+    textField.placeholder = [NSString stringWithFormat:@"Vùng chứa #%lu", (unsigned long)([SSContainerManager sharedManager].containers.count + 1)];
+  }];
+
+  UIAlertAction *cancelAction = [UIAlertAction actionWithTitle:@"Hủy" style:UIAlertActionStyleCancel handler:nil];
+  UIAlertAction *createAction = [UIAlertAction actionWithTitle:@"Tạo & Kích Hoạt" style:UIAlertActionStyleDefault handler:^(UIAlertAction *action) {
+    NSString *name = alert.textFields.firstObject.text;
+    SSContainer *newC = [[SSContainerManager sharedManager] createNewCleanContainerWithName:name];
+    [[SSContainerManager sharedManager] switchToContainer:newC error:nil];
+    
+    [self refreshStoreFrontAndDismiss];
+  }];
+
+  [alert addAction:cancelAction];
+  [alert addAction:createAction];
+  [self presentViewController:alert animated:YES completion:nil];
 }
 
 - (void)openAppAgentDashboard {
