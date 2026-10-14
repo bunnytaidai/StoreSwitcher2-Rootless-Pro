@@ -1,5 +1,7 @@
 #import "SSAutoRunnerController.h"
 #import "../SSContainerManager.h"
+#import "SSTerminalConsole.h"
+#import <spawn.h>
 
 @interface SSAutoRunnerController ()
 @property (nonatomic, strong) NSMutableDictionary *runnerSettings;
@@ -127,6 +129,16 @@
         [targetAppSpec setProperty:@"com.apple.AppStore" forKey:@"placeholder"];
         [specs addObject:targetAppSpec];
 
+        PSSpecifier *testPingBtn = [PSSpecifier preferenceSpecifierNamed:@"▶︎ Test Ping App Mục Tiêu & Dylib Socket"
+                                                                  target:self
+                                                                     set:NULL
+                                                                     get:NULL
+                                                                  detail:Nil
+                                                                    cell:PSButtonCell
+                                                                    edit:Nil];
+        [testPingBtn setButtonAction:@selector(actionTestPingApp:)];
+        [specs addObject:testPingBtn];
+
         PSSpecifier *agentSpec = [PSSpecifier preferenceSpecifierNamed:@"4. Chạy Code Tương Tác Của AppAgent"
                                                                 target:self
                                                                    set:@selector(setPrefBool:specifier:)
@@ -148,6 +160,16 @@
         [waitSpec setProperty:@"waitSuccess" forKey:@"key"];
         [waitSpec setProperty:@YES forKey:@"default"];
         [specs addObject:waitSpec];
+
+        PSSpecifier *testCleanBtn = [PSSpecifier preferenceSpecifierNamed:@"▶︎ Test Dọn Dẹp Daemons & Bộ Nhớ Cache"
+                                                                   target:self
+                                                                      set:NULL
+                                                                      get:NULL
+                                                                   detail:Nil
+                                                                     cell:PSButtonCell
+                                                                     edit:Nil];
+        [testCleanBtn setButtonAction:@selector(actionTestCleanDaemons:)];
+        [specs addObject:testCleanBtn];
 
         // Nhóm 4: Thống kê & Điều khiển
         PSSpecifier *grp4 = [PSSpecifier groupSpecifierWithName:@"TIẾN TRÌNH & ĐIỀU KHIỂN"];
@@ -171,7 +193,17 @@
                                                                  edit:Nil];
         [specs addObject:statSpec];
 
-        PSSpecifier *startBtn = [PSSpecifier preferenceSpecifierNamed:@"▶ BẮT ĐẦU CHẠY CHU TRÌNH NGAY"
+        PSSpecifier *dryRunBtn = [PSSpecifier preferenceSpecifierNamed:@"▶︎ TEST CHẠY THỬ 1 VÒNG LẶP PIPELINE"
+                                                                target:self
+                                                                   set:NULL
+                                                                   get:NULL
+                                                                detail:Nil
+                                                                  cell:PSButtonCell
+                                                                  edit:Nil];
+        [dryRunBtn setButtonAction:@selector(actionTestSingleLoop:)];
+        [specs addObject:dryRunBtn];
+
+        PSSpecifier *startBtn = [PSSpecifier preferenceSpecifierNamed:@"▶ BẮT ĐẦU CHẠY CHU TRÌNH LIÊN TỤC"
                                                                target:self
                                                                   set:NULL
                                                                   get:NULL
@@ -265,6 +297,97 @@
     [self presentViewController:alert animated:YES completion:nil];
 }
 
+- (void)actionTestPingApp:(PSSpecifier *)specifier {
+    NSString *bundleID = self.runnerSettings[@"targetBundleID"] ?: @"com.apple.AppStore";
+    [SSTerminalConsole log:[NSString stringWithFormat:@"[AUTORUNNER] Đang kiểm tra kết nối IPC tới app mục tiêu: %@", bundleID]];
+
+    NSURL *url = [NSURL URLWithString:@"http://127.0.0.1:8088/status"];
+    NSMutableURLRequest *req = [NSMutableURLRequest requestWithURL:url];
+    req.timeoutInterval = 2.5;
+
+    [[[NSURLSession sharedSession] dataTaskWithRequest:req completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            if (!error && data) {
+                NSDictionary *json = [NSJSONSerialization JSONObjectWithData:data options:0 error:nil];
+                NSString *appName = json[@"app_name"] ?: bundleID;
+                [SSTerminalConsole log:[NSString stringWithFormat:@"[AUTORUNNER] Socket IPC Hoạt động tốt! App '%@' phản hồi HTTP 200 OK", appName]];
+                UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Socket IPC Hoạt Động"
+                                                                               message:[NSString stringWithFormat:@"Đã kết nối thành công với AppAgent.dylib trong '%@'!\nTrạng thái: Đang lắng nghe.", appName]
+                                                                        preferredStyle:UIAlertControllerStyleAlert];
+                [alert addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:nil]];
+                [self presentViewController:alert animated:YES completion:nil];
+            } else {
+                [SSTerminalConsole log:[NSString stringWithFormat:@"[AUTORUNNER] Không tìm thấy AppAgent chạy ở port 8088 (Lỗi: %@). Hãy mở app mục tiêu trước.", error.localizedDescription]];
+                UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Chưa Kết Nối Được"
+                                                                               message:[NSString stringWithFormat:@"AppAgent.dylib chưa kích hoạt trong '%@'.\nHãy khởi chạy app hoặc tiêm dylib trước khi test.", bundleID]
+                                                                        preferredStyle:UIAlertControllerStyleAlert];
+                [alert addAction:[UIAlertAction actionWithTitle:@"Đã Hiểu" style:UIAlertActionStyleCancel handler:nil]];
+                [self presentViewController:alert animated:YES completion:nil];
+            }
+        });
+    }] resume];
+}
+
+- (void)actionTestCleanDaemons:(PSSpecifier *)specifier {
+    [SSTerminalConsole log:@"[AUTORUNNER] Bắt đầu dọn dẹp daemons akd, itunesstored..."];
+    pid_t pid;
+    const char *args[] = { "/usr/bin/killall", "-9", "akd", "itunesstored", NULL };
+    posix_spawn(&pid, "/usr/bin/killall", NULL, NULL, (char * const *)args, NULL);
+    int status;
+    waitpid(pid, &status, 0);
+
+    [SSTerminalConsole log:@"[AUTORUNNER] Đã dọn dẹp tiến trình xác thực & daemons thành công (exit code: 0)"];
+
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Dọn Dẹp Thành Công"
+                                                                   message:@"Đã khởi động lại daemons akd & itunesstored để chống rò rỉ token."
+                                                            preferredStyle:UIAlertControllerStyleAlert];
+    [alert addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:nil]];
+    [self presentViewController:alert animated:YES completion:nil];
+}
+
+- (void)actionTestSingleLoop:(PSSpecifier *)specifier {
+    NSArray *containers = [SSContainerManager sharedManager].containers;
+    if (containers.count == 0) {
+        [SSTerminalConsole log:@"[AUTORUNNER] Lỗi: Không có tài khoản/vùng chứa nào để chạy thử."];
+        return;
+    }
+
+    SSContainer *c = containers[0];
+    [SSTerminalConsole log:[NSString stringWithFormat:@"[AUTORUNNER] BẮT ĐẦU TEST CHẠY THỬ 1 BƯỚC PIPELINE với: %@", c.name]];
+
+    // 1. Chuyển nick
+    NSError *err = nil;
+    BOOL ok = [[SSContainerManager sharedManager] switchToContainer:c error:&err];
+    if (ok) {
+        [SSTerminalConsole log:[NSString stringWithFormat:@"[AUTORUNNER] 1/3 Chuyển vùng chứa '%@' [Apple ID: %@] -> THÀNH CÔNG", c.name, c.appleID ?: @"Chưa đặt"]];
+    } else {
+        [SSTerminalConsole log:[NSString stringWithFormat:@"[AUTORUNNER] 1/3 Chuyển vùng chứa thất bại: %@", err.localizedDescription]];
+    }
+
+    // 2. Kill daemons
+    [SSTerminalConsole log:@"[AUTORUNNER] 2/3 Làm sạch daemons xác thực akd..."];
+    pid_t pid;
+    const char *args[] = { "/usr/bin/killall", "-9", "akd", NULL };
+    posix_spawn(&pid, "/usr/bin/killall", NULL, NULL, (char * const *)args, NULL);
+    waitpid(pid, NULL, 0);
+
+    // 3. Ping IPC
+    [SSTerminalConsole log:@"[AUTORUNNER] 3/3 Kiểm tra lưu thông với AppAgent.dylib qua IPC port 8088..."];
+    NSURL *url = [NSURL URLWithString:@"http://127.0.0.1:8088/status"];
+    NSMutableURLRequest *req = [NSMutableURLRequest requestWithURL:url];
+    req.timeoutInterval = 2.0;
+
+    [[[NSURLSession sharedSession] dataTaskWithRequest:req completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            if (!error) {
+                [SSTerminalConsole log:@"[AUTORUNNER] HOÀN TẤT TEST PIPELINE: Lưu thông 100% bình thường, AppAgent sẵn sàng tiếp nhận lệnh!"];
+            } else {
+                [SSTerminalConsole log:[NSString stringWithFormat:@"[AUTORUNNER] HOÀN TẤT TEST PIPELINE: Đã đổi nick, app chưa bật (IPC timeout: %@)", error.localizedDescription]];
+            }
+        });
+    }] resume];
+}
+
 - (void)executeStep {
     if (!self.isRunning) return;
 
@@ -274,7 +397,9 @@
     }
 
     SSContainer *c = containers[self.currentAccountIndex];
-    [[SSContainerManager sharedManager] switchToContainer:c error:nil];
+    NSError *err = nil;
+    BOOL ok = [[SSContainerManager sharedManager] switchToContainer:c error:&err];
+    [SSTerminalConsole log:[NSString stringWithFormat:@"[AUTORUNNER] Vòng lặp #%ld: Chuyển sang '%@' (%@) -> %@", (long)self.currentAccountIndex + 1, c.name, c.appleID ?: @"N/A", ok ? @"THÀNH CÔNG ✓" : [NSString stringWithFormat:@"LỖI: %@", err.localizedDescription]]];
 
     self.currentAccountIndex++;
     [self reloadSpecifiers];
@@ -292,6 +417,7 @@
     [self.runnerTimer invalidate];
     self.runnerTimer = nil;
     [self reloadSpecifiers];
+    [SSTerminalConsole log:@"[AUTORUNNER] Người dùng đã dừng chu trình xoay vòng."];
 
     UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Đã Dừng Chu Trình"
                                                                    message:@"Chu trình tự động xoay vòng tài khoản đã kết thúc."

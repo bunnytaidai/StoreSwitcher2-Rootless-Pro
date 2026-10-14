@@ -23,6 +23,25 @@
 }
 
 - (NSInteger)portForBundleId:(NSString *)bundleId {
+    if (!bundleId || bundleId.length == 0) return 0;
+
+    // 1. Kiểm tra beacon file trước (thời gian thực từ AppAgent.dylib)
+    NSString *beaconPath = [NSString stringWithFormat:@"/var/mobile/Library/Application Support/StoreSwitcher/injected_beacons/%@.json", bundleId];
+    if (![[NSFileManager defaultManager] fileExistsAtPath:beaconPath]) {
+        beaconPath = [NSString stringWithFormat:@"/var/jb/var/mobile/Library/Application Support/StoreSwitcher/injected_beacons/%@.json", bundleId];
+    }
+    if ([[NSFileManager defaultManager] fileExistsAtPath:beaconPath]) {
+        NSData *data = [NSData dataWithContentsOfFile:beaconPath];
+        if (data) {
+            NSDictionary *dict = [NSJSONSerialization JSONObjectWithData:data options:0 error:nil];
+            if ([dict isKindOfClass:[NSDictionary class]] && dict[@"ipcPort"]) {
+                NSInteger port = [dict[@"ipcPort"] integerValue];
+                if (port > 0) return port;
+            }
+        }
+    }
+
+    // 2. Kiểm tra plist registry
     NSDictionary *reg = [self getRegisteredApps];
     if (reg[bundleId]) {
         return [reg[bundleId][@"port"] integerValue];

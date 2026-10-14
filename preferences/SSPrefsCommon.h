@@ -2,6 +2,7 @@
 #define SSPrefsCommon_h
 
 #import <Foundation/Foundation.h>
+#import "SSTerminalConsole.h"
 
 #if __has_include(<UIKit/UIKit.h>)
 #import <UIKit/UIKit.h>

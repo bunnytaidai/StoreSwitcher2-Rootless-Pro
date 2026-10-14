@@ -1,5 +1,6 @@
 #import "SSTestFlightManagerController.h"
 #import "../SSContainerManager.h"
+#import "SSTerminalConsole.h"
 
 @interface SSTestFlightManagerController ()
 @property (nonatomic, strong) NSMutableArray<NSMutableDictionary *> *links;
@@ -16,20 +17,6 @@
         for (NSDictionary *item in dict[@"links"]) {
             [_links addObject:[item mutableCopy]];
         }
-    }
-    if (_links.count == 0) {
-        [_links addObject:[@{
-            @"url": @"itms-beta://testflight.apple.com/join/AbC123Xy",
-            @"name": @"Beta App 1",
-            @"status": @"Còn slot (Available)",
-            @"appleID": [self getActiveAppleID:nil]
-        } mutableCopy]];
-        [_links addObject:[@{
-            @"url": @"itms-beta://testflight.apple.com/join/kQ9p3LmZ",
-            @"name": @"Game Early Access",
-            @"status": @"Đầy slot (Full - Đang quét lại)",
-            @"appleID": [self getActiveAppleID:nil]
-        } mutableCopy]];
     }
 
     _settings = [NSMutableDictionary dictionary];
@@ -99,6 +86,17 @@
             [linkSpec setProperty:@(i) forKey:@"linkIndex"];
             [linkSpec setButtonAction:@selector(openLinkDetailAction:)];
             [specs addObject:linkSpec];
+
+            PSSpecifier *testLinkBtn = [PSSpecifier preferenceSpecifierNamed:[NSString stringWithFormat:@"▶︎ Test Kiểm Tra Slot Link #%d", i + 1]
+                                                                      target:self
+                                                                         set:NULL
+                                                                         get:NULL
+                                                                      detail:Nil
+                                                                        cell:PSButtonCell
+                                                                        edit:Nil];
+            [testLinkBtn setProperty:@(i) forKey:@"linkIndex"];
+            [testLinkBtn setButtonAction:@selector(actionTestSingleLink:)];
+            [specs addObject:testLinkBtn];
         }
 
         // Nhóm 3: Dev code chạy ngầm
@@ -263,54 +261,139 @@
     [self presentViewController:alert animated:YES completion:nil];
 }
 
-- (void)logActivity:(NSString *)message {
-    NSString *logPath = @"/var/mobile/Library/Application Support/StoreSwitcher/activity.log";
-    NSFileHandle *handle = [NSFileHandle fileHandleForWritingAtPath:logPath];
-    if (handle) {
-        [handle seekToEndOfFile];
-        NSString *line = [NSString stringWithFormat:@"[%@] %@\n", [NSDate date], message];
-        [handle writeData:[line dataUsingEncoding:NSUTF8StringEncoding]];
-        [handle closeFile];
+- (void)actionTestSingleLink:(PSSpecifier *)specifier {
+    NSNumber *idx = [specifier propertyForKey:@"linkIndex"];
+    if (!idx || [idx integerValue] >= self.links.count) return;
+
+    NSMutableDictionary *item = self.links[[idx integerValue]];
+    NSString *rawUrl = item[@"url"] ?: @"";
+    NSString *httpUrl = [rawUrl stringByReplacingOccurrencesOfString:@"itms-beta://" withString:@"https://"];
+
+    [SSTerminalConsole log:[NSString stringWithFormat:@"[TESTFLIGHT] Đang kiểm tra slot thực tế với Apple Server: %@", httpUrl]];
+
+    NSURL *url = [NSURL URLWithString:httpUrl];
+    if (!url) {
+        [SSTerminalConsole log:[NSString stringWithFormat:@"[TESTFLIGHT] URL không hợp lệ: %@", rawUrl]];
+        return;
     }
+
+    NSMutableURLRequest *req = [NSMutableURLRequest requestWithURL:url];
+    [req setValue:@"Mozilla/5.0 (iPhone; CPU iPhone OS 15_8 like Mac OS X)" forHTTPHeaderField:@"User-Agent"];
+    req.timeoutInterval = 5.0;
+
+    [[[NSURLSession sharedSession] dataTaskWithRequest:req completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            if (!error && data) {
+                NSString *html = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+                NSHTTPURLResponse *httpResp = (NSHTTPURLResponse *)response;
+                [SSTerminalConsole log:[NSString stringWithFormat:@"[TESTFLIGHT] Apple Server phản hồi HTTP %ld", (long)httpResp.statusCode]];
+
+                if ([html containsString:@"This beta is full"] || [html containsString:@"The beta is full"]) {
+                    item[@"status"] = @"Đầy slot (Full)";
+                    [SSTerminalConsole log:[NSString stringWithFormat:@"[TESTFLIGHT] Link %@: ĐÃ HẾT SLOT", item[@"name"]]];
+                } else if ([html containsString:@"This beta isn't accepting any new testers"]) {
+                    item[@"status"] = @"Đã đóng tuyển tester";
+                    [SSTerminalConsole log:[NSString stringWithFormat:@"[TESTFLIGHT] Link %@: ĐÃ ĐÓNG TUYỂN TESTER", item[@"name"]]];
+                } else if ([html containsString:@"To join the beta"] || [html containsString:@"Start Testing"] || httpResp.statusCode == 200) {
+                    item[@"status"] = @"Còn slot (Available ✓)";
+                    [SSTerminalConsole log:[NSString stringWithFormat:@"[TESTFLIGHT] Link %@: CÒN SLOT THỰC TẾ (AVAILABLE) ✓", item[@"name"]]];
+                } else {
+                    item[@"status"] = [NSString stringWithFormat:@"HTTP %ld", (long)httpResp.statusCode];
+                }
+                [self saveLinksData];
+                [self reloadSpecifiers];
+
+                UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Kết Quả Quét Slot Thật"
+                                                                               message:[NSString stringWithFormat:@"App: %@\nTrạng thái: %@\nHTTP: %ld", item[@"name"], item[@"status"], (long)httpResp.statusCode]
+                                                                        preferredStyle:UIAlertControllerStyleAlert];
+                [alert addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:nil]];
+                [self presentViewController:alert animated:YES completion:nil];
+            } else {
+                [SSTerminalConsole log:[NSString stringWithFormat:@"[TESTFLIGHT] Lỗi kiểm tra mạng: %@", error.localizedDescription]];
+            }
+        });
+    }] resume];
 }
 
 - (void)joinAllLinksAction:(PSSpecifier *)specifier {
     NSString *appleID = [self getActiveAppleID:nil];
-    [self logActivity:[NSString stringWithFormat:@"[TESTFLIGHT] Bắt đầu chu trình tham gia tự động cho Apple ID: %@", appleID]];
+    [SSTerminalConsole log:[NSString stringWithFormat:@"[TESTFLIGHT] Bắt đầu chu trình tham gia tự động cho Apple ID: %@", appleID]];
 
     for (NSMutableDictionary *item in self.links) {
         NSString *url = item[@"url"];
-        [self logActivity:[NSString stringWithFormat:@"[TESTFLIGHT] Đang gửi dev code tham gia ngầm: %@", url]];
+        [SSTerminalConsole log:[NSString stringWithFormat:@"[TESTFLIGHT] Đang gửi dev code tham gia ngầm: %@", url]];
         item[@"status"] = @"Đã gửi yêu cầu tham gia ✓";
+
+        NSURL *u = [NSURL URLWithString:url];
+        if (u) {
+            [[UIApplication sharedApplication] openURL:u options:@{} completionHandler:^(BOOL success) {
+                [SSTerminalConsole log:[NSString stringWithFormat:@"[TESTFLIGHT] Mở URL TestFlight %@: %@", url, success ? @"OK" : @"Lỗi"]];
+            }];
+        }
     }
     [self saveLinksData];
     [self reloadSpecifiers];
 
     UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Đã Chạy Dev Code"
-                                                                   message:[NSString stringWithFormat:@"Đã tự động gửi yêu cầu tham gia ngầm tới %lu liên kết TestFlight!\nTrạng thái đã được lưu vào Log Tab 5.", (unsigned long)self.links.count]
+                                                                   message:[NSString stringWithFormat:@"Đã tự động gửi yêu cầu tham gia tới %lu liên kết TestFlight!", (unsigned long)self.links.count]
                                                             preferredStyle:UIAlertControllerStyleAlert];
     [alert addAction:[UIAlertAction actionWithTitle:@"Tuyệt Vời" style:UIAlertActionStyleDefault handler:nil]];
     [self presentViewController:alert animated:YES completion:nil];
 }
 
 - (void)checkLinksStatusAction:(PSSpecifier *)specifier {
-    for (NSMutableDictionary *item in self.links) {
-        item[@"status"] = @"Còn slot (Available ✓)";
-    }
-    [self saveLinksData];
-    [self reloadSpecifiers];
+    [SSTerminalConsole log:[NSString stringWithFormat:@"[TESTFLIGHT] Đang quét trạng thái slot thực tế cho %lu liên kết...", (unsigned long)self.links.count]];
 
-    UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Kiểm Tra Hoàn Tất"
-                                                                   message:@"Tất cả các liên kết TestFlight đã được cập nhật trạng thái slot mới nhất."
-                                                            preferredStyle:UIAlertControllerStyleAlert];
-    [alert addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:nil]];
-    [self presentViewController:alert animated:YES completion:nil];
+    dispatch_group_t group = dispatch_group_create();
+    for (NSMutableDictionary *item in self.links) {
+        dispatch_group_enter(group);
+        NSString *rawUrl = item[@"url"] ?: @"";
+        NSString *httpUrl = [rawUrl stringByReplacingOccurrencesOfString:@"itms-beta://" withString:@"https://"];
+        NSURL *url = [NSURL URLWithString:httpUrl];
+        if (!url) {
+            dispatch_group_leave(group);
+            continue;
+        }
+
+        NSMutableURLRequest *req = [NSMutableURLRequest requestWithURL:url];
+        [req setValue:@"Mozilla/5.0 (iPhone; CPU iPhone OS 15_8 like Mac OS X)" forHTTPHeaderField:@"User-Agent"];
+        req.timeoutInterval = 4.0;
+
+        [[[NSURLSession sharedSession] dataTaskWithRequest:req completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
+            if (!error && data) {
+                NSString *html = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+                if ([html containsString:@"This beta is full"] || [html containsString:@"The beta is full"]) {
+                    item[@"status"] = @"Đầy slot (Full)";
+                } else if ([html containsString:@"This beta isn't accepting any new testers"]) {
+                    item[@"status"] = @"Đã đóng tuyển tester";
+                } else {
+                    item[@"status"] = @"Còn slot (Available ✓)";
+                }
+            } else {
+                item[@"status"] = @"Lỗi kết nối";
+            }
+            dispatch_group_leave(group);
+        }] resume];
+    }
+
+    dispatch_group_notify(group, dispatch_get_main_queue(), ^{
+        [self saveLinksData];
+        [self reloadSpecifiers];
+        [SSTerminalConsole log:@"[TESTFLIGHT] Hoàn tất quét slot tất cả các link TestFlight từ Apple Server."];
+
+        UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Kiểm Tra Hoàn Tất"
+                                                                       message:@"Tất cả các liên kết TestFlight đã được cập nhật trạng thái slot thực tế từ máy chủ Apple."
+                                                                preferredStyle:UIAlertControllerStyleAlert];
+        [alert addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:nil]];
+        [self presentViewController:alert animated:YES completion:nil];
+    });
 }
 
 - (void)clearAllLinksAction:(PSSpecifier *)specifier {
     [self.links removeAllObjects];
     [self saveLinksData];
     [self reloadSpecifiers];
+    [SSTerminalConsole log:@"[TESTFLIGHT] Đã xóa toàn bộ danh sách liên kết TestFlight."];
 
     UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Đã Làm Sạch"
                                                                    message:@"Toàn bộ danh sách liên kết TestFlight đã được xóa."

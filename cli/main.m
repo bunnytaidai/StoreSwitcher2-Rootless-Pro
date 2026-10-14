@@ -12,6 +12,26 @@ static NSDictionary *getRegistry() {
 }
 
 static NSInteger getPortForApp(NSString *appQuery) {
+    if (!appQuery || appQuery.length == 0) return 0;
+
+    // 1. Kiểm tra beacon file trực tiếp
+    NSString *beaconDir = @"/var/mobile/Library/Application Support/StoreSwitcher/injected_beacons";
+    if (![[NSFileManager defaultManager] fileExistsAtPath:beaconDir]) {
+        beaconDir = @"/var/jb/var/mobile/Library/Application Support/StoreSwitcher/injected_beacons";
+    }
+    NSString *bPath = [beaconDir stringByAppendingPathComponent:[NSString stringWithFormat:@"%@.json", appQuery]];
+    if ([[NSFileManager defaultManager] fileExistsAtPath:bPath]) {
+        NSData *d = [NSData dataWithContentsOfFile:bPath];
+        if (d) {
+            NSDictionary *dict = [NSJSONSerialization JSONObjectWithData:d options:0 error:nil];
+            if ([dict isKindOfClass:[NSDictionary class]] && dict[@"ipcPort"]) {
+                NSInteger port = [dict[@"ipcPort"] integerValue];
+                if (port > 0) return port;
+            }
+        }
+    }
+
+    // 2. Tìm kiếm trong registry
     NSDictionary *reg = getRegistry();
     if (reg[appQuery]) {
         return [reg[appQuery][@"port"] integerValue];

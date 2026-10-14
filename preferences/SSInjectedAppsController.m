@@ -1,4 +1,5 @@
 #import "SSInjectedAppsController.h"
+#import "SSPrefsCommon.h"
 #import <spawn.h>
 #import <signal.h>
 
@@ -68,21 +69,13 @@
 
         if (_realInjectedApps.count == 0) {
             PSSpecifier *emptySpec = [PSSpecifier preferenceSpecifierNamed:@"⚠️ Chưa có app nào tiêm dylib báo về"
-                                                                    target:self
-                                                                       set:NULL
-                                                                       get:NULL
-                                                                    detail:Nil
-                                                                      cell:PSTitleValueCell
-                                                                      edit:Nil];
+                                                                    target:self set:NULL get:NULL detail:Nil
+                                                                      cell:PSTitleValueCell edit:Nil];
             [specs addObject:emptySpec];
 
             PSSpecifier *guideSpec = [PSSpecifier preferenceSpecifierNamed:@"(Hãy tiêm AppAgent.dylib qua TrollFools & mở app)"
-                                                                    target:self
-                                                                       set:NULL
-                                                                       get:NULL
-                                                                    detail:Nil
-                                                                      cell:PSTitleValueCell
-                                                                      edit:Nil];
+                                                                    target:self set:NULL get:NULL detail:Nil
+                                                                      cell:PSTitleValueCell edit:Nil];
             [specs addObject:guideSpec];
         } else {
             for (NSDictionary *app in _realInjectedApps) {
@@ -97,12 +90,8 @@
                                    app[@"pid"]];
 
                 PSSpecifier *appSpec = [PSSpecifier preferenceSpecifierNamed:title
-                                                                     target:self
-                                                                        set:NULL
-                                                                        get:NULL
-                                                                     detail:Nil
-                                                                       cell:PSButtonCell
-                                                                       edit:Nil];
+                                                                      target:self set:NULL get:NULL detail:Nil
+                                                                        cell:PSButtonCell edit:Nil];
                 [appSpec setProperty:app[@"bundleID"] forKey:@"bundleID"];
                 [appSpec setButtonAction:@selector(selectAppFromList:)];
                 [specs addObject:appSpec];
@@ -111,12 +100,8 @@
 
         // Nút quét lại
         PSSpecifier *btnRescan = [PSSpecifier preferenceSpecifierNamed:@"🔄 Quét Lại Danh Sách App Đang Chạy"
-                                                                target:self
-                                                                   set:NULL
-                                                                   get:NULL
-                                                                detail:Nil
-                                                                  cell:PSButtonCell
-                                                                  edit:Nil];
+                                                                target:self set:NULL get:NULL detail:Nil
+                                                                  cell:PSButtonCell edit:Nil];
         [btnRescan setButtonAction:@selector(rescanTapped:)];
         [specs addObject:btnRescan];
 
@@ -139,76 +124,60 @@
             [specs addObject:grpDetail];
 
             PSSpecifier *specPID = [PSSpecifier preferenceSpecifierNamed:@"PID Tiến Trình Thật"
-                                                                  target:self
-                                                                     set:NULL
-                                                                     get:@selector(getSelectedPID:)
-                                                                  detail:Nil
-                                                                    cell:PSTitleValueCell
-                                                                    edit:Nil];
+                                                                  target:self set:NULL get:@selector(getSelectedPID:) detail:Nil
+                                                                    cell:PSTitleValueCell edit:Nil];
             [specs addObject:specPID];
 
             PSSpecifier *specVer = [PSSpecifier preferenceSpecifierNamed:@"Phiên Bản App"
-                                                                  target:self
-                                                                     set:NULL
-                                                                     get:@selector(getSelectedVersion:)
-                                                                  detail:Nil
-                                                                    cell:PSTitleValueCell
-                                                                    edit:Nil];
+                                                                  target:self set:NULL get:@selector(getSelectedVersion:) detail:Nil
+                                                                    cell:PSTitleValueCell edit:Nil];
             [specs addObject:specVer];
 
             PSSpecifier *specIPC = [PSSpecifier preferenceSpecifierNamed:@"Cổng Điều Khiển IPC Ngầm"
-                                                                  target:self
-                                                                     set:NULL
-                                                                     get:@selector(getSelectedIPC:)
-                                                                  detail:Nil
-                                                                    cell:PSTitleValueCell
-                                                                    edit:Nil];
+                                                                  target:self set:NULL get:@selector(getSelectedIPC:) detail:Nil
+                                                                    cell:PSTitleValueCell edit:Nil];
             [specs addObject:specIPC];
 
-            // Nhóm 2: Điều khiển hành động trên app qua dylib
-            PSSpecifier *grp2 = [PSSpecifier groupSpecifierWithName:@"ĐIỀU KHIỂN HÀNH ĐỘNG TRÊN APP QUA DYLIB"];
-            [grp2 setProperty:@"Các hành động được gửi trực tiếp vào dylib đang chạy bên trong app." forKey:@"footerText"];
-            [specs addObject:grp2];
+            // Nhóm 2: Các nút TEST kiểm tra lưu thông 2 chiều Tweak <-> Dylib
+            PSSpecifier *grpTest = [PSSpecifier groupSpecifierWithName:@"KIỂM TRA LƯU THÔNG TWEAK <-> DYLIB (LIVE TEST)"];
+            [grpTest setProperty:@"Bấm nút để gửi lệnh thực tế qua socket IPC vào AppAgent.dylib và theo dõi phản hồi trên Terminal Console." forKey:@"footerText"];
+            [specs addObject:grpTest];
 
-            PSSpecifier *actSimBuy = [PSSpecifier preferenceSpecifierNamed:@"▶ Giả Lập Thao Tác Chạm Mua (Simulate Tap)"
-                                                                   target:self
-                                                                      set:NULL
-                                                                      get:NULL
-                                                                   detail:Nil
-                                                                     cell:PSButtonCell
-                                                                     edit:Nil];
-            [actSimBuy setButtonAction:@selector(triggerSimulatedPurchase:)];
-            [specs addObject:actSimBuy];
+            PSSpecifier *btnPing = [PSSpecifier preferenceSpecifierNamed:@"▶︎ 1. Test Ping IPC Socket (GET /status)"
+                                                                  target:self set:NULL get:NULL detail:Nil
+                                                                    cell:PSButtonCell edit:Nil];
+            [btnPing setButtonAction:@selector(testPingIPCAction:)];
+            [specs addObject:btnPing];
 
-            PSSpecifier *btnReadReceipt = [PSSpecifier preferenceSpecifierNamed:@"🧾 Kiểm Tra & Đọc Receipt StoreKit Thật"
-                                                                         target:self
-                                                                            set:NULL
-                                                                            get:NULL
-                                                                         detail:Nil
-                                                                           cell:PSButtonCell
-                                                                           edit:Nil];
-            [btnReadReceipt setButtonAction:@selector(readStoreKitReceipt:)];
-            [specs addObject:btnReadReceipt];
+            PSSpecifier *btnPackets = [PSSpecifier preferenceSpecifierNamed:@"▶︎ 2. Test Bắt Packet Mạng / StoreKit (/packets)"
+                                                                     target:self set:NULL get:NULL detail:Nil
+                                                                       cell:PSButtonCell edit:Nil];
+            [btnPackets setButtonAction:@selector(testFetchPacketsAction:)];
+            [specs addObject:btnPackets];
 
-            PSSpecifier *btnSniff = [PSSpecifier preferenceSpecifierNamed:@"📡 Soi Packets Mạng & StoreKit Bắt Được"
-                                                                   target:self
-                                                                      set:NULL
-                                                                      get:NULL
-                                                                   detail:Nil
-                                                                     cell:PSButtonCell
-                                                                     edit:Nil];
-            [btnSniff setButtonAction:@selector(viewCapturedPackets:)];
-            [specs addObject:btnSniff];
+            PSSpecifier *btnDumpUI = [PSSpecifier preferenceSpecifierNamed:@"▶︎ 3. Test Trích Xuất Cây Giao Diện UI (/ui/dump)"
+                                                                    target:self set:NULL get:NULL detail:Nil
+                                                                      cell:PSButtonCell edit:Nil];
+            [btnDumpUI setButtonAction:@selector(testDumpUIAction:)];
+            [specs addObject:btnDumpUI];
 
-            PSSpecifier *actRestart = [PSSpecifier preferenceSpecifierNamed:@"🔄 Khởi Động Lại App Mục Tiêu"
-                                                                     target:self
-                                                                        set:NULL
-                                                                        get:NULL
-                                                                     detail:Nil
-                                                                       cell:PSButtonCell
-                                                                       edit:Nil];
-            [actRestart setButtonAction:@selector(restartTargetApp:)];
-            [specs addObject:actRestart];
+            PSSpecifier *btnOpenURL = [PSSpecifier preferenceSpecifierNamed:@"▶︎ 4. Test Mở URL Scheme / Deeplink (/open-url)"
+                                                                     target:self set:NULL get:NULL detail:Nil
+                                                                       cell:PSButtonCell edit:Nil];
+            [btnOpenURL setButtonAction:@selector(testOpenDeeplinkAction:)];
+            [specs addObject:btnOpenURL];
+
+            PSSpecifier *btnSimBuy = [PSSpecifier preferenceSpecifierNamed:@"▶︎ 5. Test Giả Lập Bấm Nút Mua In-App (/ui/click)"
+                                                                    target:self set:NULL get:NULL detail:Nil
+                                                                      cell:PSButtonCell edit:Nil];
+            [btnSimBuy setButtonAction:@selector(testSimulatePurchaseAction:)];
+            [specs addObject:btnSimBuy];
+
+            PSSpecifier *btnRestart = [PSSpecifier preferenceSpecifierNamed:@"🔄 Khởi Động Lại App Mục Tiêu"
+                                                                     target:self set:NULL get:NULL detail:Nil
+                                                                       cell:PSButtonCell edit:Nil];
+            [btnRestart setButtonAction:@selector(restartTargetApp:)];
+            [specs addObject:btnRestart];
         }
 
         _specifiers = specs;
@@ -216,89 +185,179 @@
     return _specifiers;
 }
 
-- (id)getSelectedPID:(PSSpecifier *)spec {
-    for (NSDictionary *a in _realInjectedApps) {
-        if ([a[@"bundleID"] isEqualToString:self.selectedBundleID]) {
-            return [NSString stringWithFormat:@"%@ (%@)", a[@"pid"], [a[@"isAlive"] boolValue] ? @"Đang chạy" : @"Đã dừng"];
-        }
-    }
-    return @"N/A";
+- (void)viewWillAppear:(BOOL)animated {
+    [super viewWillAppear:animated];
+    self.title = @"🎯 App Tiêm Dylib (Thực Tế)";
+    [SSTerminalConsole attachToViewController:self];
 }
 
-- (id)getSelectedVersion:(PSSpecifier *)spec {
-    for (NSDictionary *a in _realInjectedApps) {
-        if ([a[@"bundleID"] isEqualToString:self.selectedBundleID]) {
-            return a[@"version"] ?: @"1.0";
-        }
-    }
-    return @"N/A";
+- (void)viewDidLayoutSubviews {
+    [super viewDidLayoutSubviews];
+    [SSTerminalConsole attachToViewController:self];
 }
 
-- (id)getSelectedIPC:(PSSpecifier *)spec {
-    return @"127.0.0.1:9099 (Sẵn sàng)";
-}
+#pragma mark - Lựa chọn App & Thông tin
 
 - (void)selectAppFromList:(PSSpecifier *)specifier {
     NSString *bundleID = [specifier propertyForKey:@"bundleID"];
     if (bundleID) {
         self.selectedBundleID = bundleID;
-        _specifiers = nil;
+        [SSTerminalConsole logAction:@"Chọn App" status:@"OK" details:[NSString stringWithFormat:@"Đã chuyển sang: %@", bundleID]];
         [self reloadSpecifiers];
     }
 }
 
-- (void)rescanTapped:(PSSpecifier *)spec {
+- (void)rescanTapped:(PSSpecifier *)specifier {
+    [SSTerminalConsole logAction:@"Quét App" status:@"SCAN" details:@"Đang kiểm tra các file beacon trong injected_beacons/..."];
     _specifiers = nil;
     [self reloadSpecifiers];
+    [SSTerminalConsole logAction:@"Quét App" status:@"DONE" details:[NSString stringWithFormat:@"Tìm thấy %lu app đã tiêm dylib", (unsigned long)_realInjectedApps.count]];
 }
 
-- (void)triggerSimulatedPurchase:(PSSpecifier *)specifier {
-    UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Giả Lập Chạm Mua Ngầm" 
-                                                                   message:[NSString stringWithFormat:@"Đang gửi tín hiệu chạm mua qua dylib tới app: %@", self.selectedBundleID]
-                                                            preferredStyle:UIAlertControllerStyleAlert];
-    [alert addAction:[UIAlertAction actionWithTitle:@"Đóng" style:UIAlertActionStyleCancel handler:nil]];
-    [self presentViewController:alert animated:YES completion:nil];
-}
-
-- (void)readStoreKitReceipt:(PSSpecifier *)specifier {
-    NSDictionary *sel = nil;
+- (NSDictionary *)currentSelectedAppDict {
     for (NSDictionary *a in _realInjectedApps) {
         if ([a[@"bundleID"] isEqualToString:self.selectedBundleID]) {
-            sel = a; break;
+            return a;
         }
     }
-    NSString *receiptPath = sel[@"receiptPath"] ?: @"Chưa tìm thấy";
-    BOOL exists = [sel[@"hasStoreKitReceipt"] boolValue];
-
-    UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"StoreKit Receipt Thật" 
-                                                                   message:[NSString stringWithFormat:@"Đường dẫn: %@\nTrạng thái: %@", receiptPath, exists ? @"Đã nạp hợp lệ" : @"Chưa có receipt trên máy"]
-                                                            preferredStyle:UIAlertControllerStyleAlert];
-    [alert addAction:[UIAlertAction actionWithTitle:@"Đóng" style:UIAlertActionStyleCancel handler:nil]];
-    [self presentViewController:alert animated:YES completion:nil];
+    return _realInjectedApps.firstObject;
 }
 
-- (void)viewCapturedPackets:(PSSpecifier *)specifier {
-    UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Packets Đã Bắt Được" 
-                                                                   message:[NSString stringWithFormat:@"Đã kết nối IPC với %@.\nSẵn sàng bắt và phát lại gói tin StoreKit IAP & API.", self.selectedBundleID]
-                                                            preferredStyle:UIAlertControllerStyleAlert];
-    [alert addAction:[UIAlertAction actionWithTitle:@"Đóng" style:UIAlertActionStyleCancel handler:nil]];
-    [self presentViewController:alert animated:YES completion:nil];
+- (id)getSelectedPID:(PSSpecifier *)specifier {
+    NSDictionary *app = [self currentSelectedAppDict];
+    if (!app) return @"N/A";
+    BOOL alive = [app[@"isAlive"] boolValue];
+    return [NSString stringWithFormat:@"%@ (%@)", app[@"pid"] ?: @"0", alive ? @"Đang chạy" : @"Đã dừng"];
+}
+
+- (id)getSelectedVersion:(PSSpecifier *)specifier {
+    NSDictionary *app = [self currentSelectedAppDict];
+    return app[@"version"] ?: @"1.0";
+}
+
+- (id)getSelectedIPC:(PSSpecifier *)specifier {
+    NSDictionary *app = [self currentSelectedAppDict];
+    return [NSString stringWithFormat:@"127.0.0.1:%@", app[@"ipcPort"] ?: @"9090"];
+}
+
+#pragma mark - Các Lệnh Test Thực Tế Qua IPC
+
+- (void)testPingIPCAction:(PSSpecifier *)specifier {
+    NSDictionary *app = [self currentSelectedAppDict];
+    uint16_t port = [app[@"ipcPort"] intValue] ?: 9090;
+    
+    [SSTerminalConsole logAction:@"Ping IPC" status:@"SEND" details:[NSString stringWithFormat:@"GET http://127.0.0.1:%u/status", port]];
+
+    NSURL *url = [NSURL URLWithString:[NSString stringWithFormat:@"http://127.0.0.1:%u/status", port]];
+    NSURLSessionDataTask *task = [[NSURLSession sharedSession] dataTaskWithURL:url completionHandler:^(NSData *data, NSURLResponse *res, NSError *err) {
+        if (err) {
+            [SSTerminalConsole logAction:@"Ping IPC" status:@"ERROR" details:err.localizedDescription];
+        } else {
+            NSDictionary *json = [NSJSONSerialization JSONObjectWithData:data options:0 error:nil];
+            [SSTerminalConsole logAction:@"Ping IPC" status:@"200 OK" details:[NSString stringWithFormat:@"App: %@ (PID: %@, System: %@)", json[@"appName"], json[@"pid"], json[@"systemVersion"]]];
+        }
+    }];
+    [task resume];
+}
+
+- (void)testFetchPacketsAction:(PSSpecifier *)specifier {
+    NSDictionary *app = [self currentSelectedAppDict];
+    uint16_t port = [app[@"ipcPort"] intValue] ?: 9090;
+
+    [SSTerminalConsole logAction:@"Lấy Packets" status:@"SEND" details:[NSString stringWithFormat:@"GET http://127.0.0.1:%u/packets", port]];
+
+    NSURL *url = [NSURL URLWithString:[NSString stringWithFormat:@"http://127.0.0.1:%u/packets", port]];
+    NSURLSessionDataTask *task = [[NSURLSession sharedSession] dataTaskWithURL:url completionHandler:^(NSData *data, NSURLResponse *res, NSError *err) {
+        if (err) {
+            [SSTerminalConsole logAction:@"Lấy Packets" status:@"ERROR" details:err.localizedDescription];
+        } else {
+            NSDictionary *json = [NSJSONSerialization JSONObjectWithData:data options:0 error:nil];
+            NSArray *packets = json[@"packets"];
+            [SSTerminalConsole logAction:@"Lấy Packets" status:@"200 OK" details:[NSString stringWithFormat:@"Đã thu được %lu gói tin từ AppAgent (StoreKit, HTTPS, Deeplink)", (unsigned long)packets.count]];
+            if (packets.count > 0) {
+                NSDictionary *first = packets.firstObject;
+                [SSTerminalConsole logAction:@"Packet Gần Nhất" status:@"INFO" details:[NSString stringWithFormat:@"URL: %@ | Loại: %@", first[@"url"], first[@"type"]]];
+            }
+        }
+    }];
+    [task resume];
+}
+
+- (void)testDumpUIAction:(PSSpecifier *)specifier {
+    NSDictionary *app = [self currentSelectedAppDict];
+    uint16_t port = [app[@"ipcPort"] intValue] ?: 9090;
+
+    [SSTerminalConsole logAction:@"Soi Giao Diện" status:@"SEND" details:[NSString stringWithFormat:@"GET http://127.0.0.1:%u/ui/dump", port]];
+
+    NSURL *url = [NSURL URLWithString:[NSString stringWithFormat:@"http://127.0.0.1:%u/ui/dump", port]];
+    NSURLSessionDataTask *task = [[NSURLSession sharedSession] dataTaskWithURL:url completionHandler:^(NSData *data, NSURLResponse *res, NSError *err) {
+        if (err) {
+            [SSTerminalConsole logAction:@"Soi Giao Diện" status:@"ERROR" details:err.localizedDescription];
+        } else {
+            NSDictionary *json = [NSJSONSerialization JSONObjectWithData:data options:0 error:nil];
+            NSDictionary *ui = json[@"ui"];
+            [SSTerminalConsole logAction:@"Soi Giao Diện" status:@"200 OK" details:[NSString stringWithFormat:@"Root Class: %@ | Số phần tử con: %lu", ui[@"className"], (unsigned long)[ui[@"subviews"] count]]];
+        }
+    }];
+    [task resume];
+}
+
+- (void)testOpenDeeplinkAction:(PSSpecifier *)specifier {
+    NSDictionary *app = [self currentSelectedAppDict];
+    uint16_t port = [app[@"ipcPort"] intValue] ?: 9090;
+
+    NSString *testURL = @"itms-apps://apps.apple.com/account/subscriptions";
+    [SSTerminalConsole logAction:@"Mở Deeplink" status:@"SEND" details:[NSString stringWithFormat:@"POST http://127.0.0.1:%u/open-url -> %@", port, testURL]];
+
+    NSURL *url = [NSURL URLWithString:[NSString stringWithFormat:@"http://127.0.0.1:%u/open-url", port]];
+    NSMutableURLRequest *req = [NSMutableURLRequest requestWithURL:url];
+    req.HTTPMethod = @"POST";
+    [req setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
+    req.HTTPBody = [NSJSONSerialization dataWithJSONObject:@{@"url": testURL} options:0 error:nil];
+
+    NSURLSessionDataTask *task = [[NSURLSession sharedSession] dataTaskWithRequest:req completionHandler:^(NSData *data, NSURLResponse *res, NSError *err) {
+        if (err) {
+            [SSTerminalConsole logAction:@"Mở Deeplink" status:@"ERROR" details:err.localizedDescription];
+        } else {
+            NSDictionary *json = [NSJSONSerialization JSONObjectWithData:data options:0 error:nil];
+            [SSTerminalConsole logAction:@"Mở Deeplink" status:@"200 OK" details:json[@"message"] ?: @"Đã mở URL thành công"];
+        }
+    }];
+    [task resume];
+}
+
+- (void)testSimulatePurchaseAction:(PSSpecifier *)specifier {
+    NSDictionary *app = [self currentSelectedAppDict];
+    uint16_t port = [app[@"ipcPort"] intValue] ?: 9090;
+
+    [SSTerminalConsole logAction:@"Giả Lập Bấm Nút" status:@"SEND" details:[NSString stringWithFormat:@"POST http://127.0.0.1:%u/ui/click (Mua / Subscribe)", port]];
+
+    NSURL *url = [NSURL URLWithString:[NSString stringWithFormat:@"http://127.0.0.1:%u/ui/click", port]];
+    NSMutableURLRequest *req = [NSMutableURLRequest requestWithURL:url];
+    req.HTTPMethod = @"POST";
+    [req setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
+    req.HTTPBody = [NSJSONSerialization dataWithJSONObject:@{@"keyword": @"Mua"} options:0 error:nil];
+
+    NSURLSessionDataTask *task = [[NSURLSession sharedSession] dataTaskWithRequest:req completionHandler:^(NSData *data, NSURLResponse *res, NSError *err) {
+        if (err) {
+            [SSTerminalConsole logAction:@"Giả Lập Bấm Nút" status:@"ERROR" details:err.localizedDescription];
+        } else {
+            NSDictionary *json = [NSJSONSerialization JSONObjectWithData:data options:0 error:nil];
+            [SSTerminalConsole logAction:@"Giả Lập Bấm Nút" status:@"200 OK" details:json[@"message"] ?: @"Đã thực thi bấm nút"];
+        }
+    }];
+    [task resume];
 }
 
 - (void)restartTargetApp:(PSSpecifier *)specifier {
-    if (self.selectedBundleID.length > 0) {
-        pid_t pid;
-        char *argv[] = {"/usr/bin/killall", "-9", (char *)[self.selectedBundleID UTF8String], NULL};
-        posix_spawn(&pid, "/usr/bin/killall", NULL, NULL, argv, NULL);
-
-        UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Khởi Động Lại App" 
-                                                                       message:[NSString stringWithFormat:@"Đã gửi lệnh tắt tiến trình %@", self.selectedBundleID] 
-                                                                preferredStyle:UIAlertControllerStyleAlert];
-        [alert addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleCancel handler:nil]];
-        [self presentViewController:alert animated:YES completion:nil];
-        
-        _specifiers = nil;
-        [self reloadSpecifiers];
+    NSDictionary *app = [self currentSelectedAppDict];
+    pid_t pid = [app[@"pid"] intValue];
+    if (pid > 0) {
+        kill(pid, SIGKILL);
+        [SSTerminalConsole logAction:@"Khởi Động Lại" status:@"KILL" details:[NSString stringWithFormat:@"Đã dừng tiến trình PID: %d", pid]];
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+            [self rescanTapped:nil];
+        });
     }
 }
 

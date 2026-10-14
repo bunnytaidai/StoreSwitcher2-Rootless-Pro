@@ -1,4 +1,5 @@
 #import "SSBasePrefsController.h"
+#import "SSTerminalConsole.h"
 
 @implementation SSBasePrefsController
 
@@ -36,6 +37,21 @@
 
 - (BOOL)canBeShownFromSuspendedState {
     return YES;
+}
+
+- (void)viewWillAppear:(BOOL)animated {
+    [super viewWillAppear:animated];
+    [[SSTerminalConsole sharedConsole] attachToViewController:self];
+}
+
+- (void)viewDidAppear:(BOOL)animated {
+    [super viewDidAppear:animated];
+    [[SSTerminalConsole sharedConsole] attachToViewController:self];
+}
+
+- (void)viewDidLayoutSubviews {
+    [super viewDidLayoutSubviews];
+    [[SSTerminalConsole sharedConsole] updateLayoutForViewController:self];
 }
 
 // Safety net: absorb any other Preferences.framework private selectors

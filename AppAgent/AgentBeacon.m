@@ -4,8 +4,14 @@
 
 static NSTimer *s_heartbeatTimer = nil;
 static NSMutableArray *s_storeKitProducts = nil;
+static uint16_t s_ipcPort = 9100;
 
 @implementation AgentBeacon
+
++ (void)updateIpcPort:(uint16_t)port {
+    s_ipcPort = port;
+    [self writeBeacon];
+}
 
 + (NSString *)beaconsDirectory {
     NSArray *candidates = @[
@@ -87,7 +93,7 @@ static NSMutableArray *s_storeKitProducts = nil;
     beacon[@"lastHeartbeat"] = @([[NSDate date] timeIntervalSince1970]);
     beacon[@"hasStoreKitReceipt"] = @(hasReceipt);
     beacon[@"receiptPath"] = receiptURL ? receiptURL.path : @"";
-    beacon[@"ipcPort"] = @(9099);
+    beacon[@"ipcPort"] = @(s_ipcPort);
 
     @synchronized (s_storeKitProducts) {
         beacon[@"storeKitProducts"] = [s_storeKitProducts copy];

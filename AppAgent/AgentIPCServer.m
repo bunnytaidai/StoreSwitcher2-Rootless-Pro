@@ -1,4 +1,5 @@
 #import "AgentIPCServer.h"
+#import "AgentBeacon.h"
 #import "AgentPacketManager.h"
 #import "RuntimeInspector.h"
 #import "UIInspector.h"
@@ -81,47 +82,44 @@
     if (self.isRunning) return;
 
     dispatch_async(self.serverQueue, ^{
-        self.serverSocket = socket(AF_INET, SOCK_STREAM, 0);
-        if (self.serverSocket < 0) {
-            NSLog(@"[AppAgent] Không thể khởi tạo socket IPC!");
-            return;
-        }
-
-        int opt = 1;
-        setsockopt(self.serverSocket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
-
-        struct sockaddr_in serverAddr;
-        memset(&serverAddr, 0, sizeof(serverAddr));
-        serverAddr.sin_family = AF_INET;
-        serverAddr.sin_addr.s_addr = inet_addr("127.0.0.1"); // Chỉ lắng nghe localhost để bảo mật
-
-        // Tự động tìm port trống từ 9100 trở đi
-        uint16_t currentPort = 9100;
-        int bindResult = -1;
+        int boundSocket = -1;
+        uint16_t boundPort = 0;
+        
+        // Thử tìm port trống từ 9100 đến 9300, mỗi lần thử mở một socket mới
         for (int i = 0; i < 200; i++) {
-            currentPort = 9100 + i;
-            serverAddr.sin_port = htons(currentPort);
-            bindResult = bind(self.serverSocket, (struct sockaddr *)&serverAddr, sizeof(serverAddr));
-            if (bindResult == 0) break;
+            uint16_t tryPort = 9100 + i;
+            int s = socket(AF_INET, SOCK_STREAM, 0);
+            if (s < 0) continue;
+            
+            int opt = 1;
+            setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+            
+            struct sockaddr_in serverAddr;
+            memset(&serverAddr, 0, sizeof(serverAddr));
+            serverAddr.sin_family = AF_INET;
+            serverAddr.sin_addr.s_addr = inet_addr("127.0.0.1");
+            serverAddr.sin_port = htons(tryPort);
+            
+            if (bind(s, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) == 0) {
+                if (listen(s, 15) == 0) {
+                    boundSocket = s;
+                    boundPort = tryPort;
+                    break;
+                }
+            }
+            close(s);
         }
 
-        if (bindResult < 0) {
-            NSLog(@"[AppAgent] Lỗi bind socket IPC port!");
-            close(self.serverSocket);
-            self.serverSocket = -1;
+        if (boundSocket < 0) {
+            NSLog(@"[AppAgent] Không thể tìm thấy port IPC khả dụng!");
             return;
         }
 
-        if (listen(self.serverSocket, 15) < 0) {
-            NSLog(@"[AppAgent] Lỗi listen socket IPC!");
-            close(self.serverSocket);
-            self.serverSocket = -1;
-            return;
-        }
-
-        self.port = currentPort;
+        self.serverSocket = boundSocket;
+        self.port = boundPort;
         self.isRunning = YES;
         [self registerAppInSystem];
+        [AgentBeacon updateIpcPort:boundPort];
 
         NSLog(@"[AppAgent] IPC REST Server đang chạy tại 127.0.0.1:%d cho App: %@", self.port, [[NSBundle mainBundle] bundleIdentifier]);
 
@@ -130,7 +128,13 @@
             socklen_t clientLen = sizeof(clientAddr);
             int clientSocket = accept(self.serverSocket, (struct sockaddr *)&clientAddr, &clientLen);
             if (clientSocket < 0) {
+                if (errno == EINTR) continue;
                 if (!self.isRunning) break;
+                if (errno == EBADF || errno == EINVAL) {
+                    NSLog(@"[AppAgent] Socket IPC đã đóng (errno: %d)", errno);
+                    break;
+                }
+                usleep(20000); // 20ms ngăn ngừa nghẽn CPU
                 continue;
             }
 
@@ -142,16 +146,45 @@
 }
 
 - (void)handleClient:(int)clientSocket {
-    char buffer[16384];
-    memset(buffer, 0, sizeof(buffer));
-    ssize_t bytesRead = recv(clientSocket, buffer, sizeof(buffer) - 1, 0);
+    NSMutableData *reqData = [NSMutableData data];
+    char chunk[4096];
+    
+    // Set 3-second timeout for socket operations
+    struct timeval tv;
+    tv.tv_sec = 3;
+    tv.tv_usec = 0;
+    setsockopt(clientSocket, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof tv);
 
+    ssize_t bytesRead = recv(clientSocket, chunk, sizeof(chunk), 0);
     if (bytesRead <= 0) {
         close(clientSocket);
         return;
     }
+    [reqData appendBytes:chunk length:bytesRead];
 
-    NSString *rawRequest = [NSString stringWithUTF8String:buffer];
+    // Read full HTTP request including Content-Length body
+    NSString *rawRequest = [[NSString alloc] initWithData:reqData encoding:NSUTF8StringEncoding];
+    if (rawRequest) {
+        NSRange headerEnd = [rawRequest rangeOfString:@"\r\n\r\n"];
+        if (headerEnd.location != NSNotFound) {
+            NSInteger expectedLength = 0;
+            NSRange clRange = [rawRequest rangeOfString:@"Content-Length:" options:NSCaseInsensitiveSearch];
+            if (clRange.location != NSNotFound) {
+                NSString *sub = [rawRequest substringFromIndex:clRange.location + 15];
+                NSScanner *sc = [NSScanner scannerWithString:sub];
+                [sc scanInteger:&expectedLength];
+            }
+            NSUInteger bodyReceived = reqData.length - (headerEnd.location + 4);
+            while (bodyReceived < expectedLength) {
+                ssize_t more = recv(clientSocket, chunk, sizeof(chunk), 0);
+                if (more <= 0) break;
+                [reqData appendBytes:chunk length:more];
+                bodyReceived += more;
+            }
+        }
+    }
+
+    rawRequest = [[NSString alloc] initWithData:reqData encoding:NSUTF8StringEncoding];
     if (!rawRequest) {
         close(clientSocket);
         return;
@@ -193,7 +226,7 @@
         }
     }
 
-    // Trích xuất Request Body nếu có POST
+    // Trích xuất Request Body nếu có
     id jsonBody = nil;
     NSRange bodyRange = [rawRequest rangeOfString:@"\r\n\r\n"];
     if (bodyRange.location != NSNotFound) {
@@ -339,12 +372,12 @@
     }
 
     // 14. Mở Deeplink URL Scheme trực tiếp
-    if ([endpoint isEqualToString:@"/open-url"] && [method isEqualToString:@"POST"]) {
+    if ([endpoint isEqualToString:@"/open-url"]) {
         NSString *urlStr = body[@"url"] ?: params[@"url"];
-        if (!urlStr) return @{@"success": @NO, @"error": @"Thiếu url"};
+        if (!urlStr || urlStr.length == 0) return @{@"success": @NO, @"error": @"Thiếu url"};
         dispatch_async(dispatch_get_main_queue(), ^{
             NSURL *url = [NSURL URLWithString:urlStr];
-            if (url && [[UIApplication sharedApplication] canOpenURL:url]) {
+            if (url) {
                 [[UIApplication sharedApplication] openURL:url options:@{} completionHandler:nil];
             }
         });

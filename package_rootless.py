@@ -52,7 +52,9 @@ if os.path.exists(f"{PROJECT_DIR}/layout/Library/PreferenceLoader/Preferences/St
     shutil.copy(f"{PROJECT_DIR}/layout/Library/PreferenceLoader/Preferences/StoreSwitcher.png", f"{PKG_DIR}/var/jb/Library/PreferenceLoader/Preferences/StoreSwitcher.png")
 
 # 6. PreferenceBundle (compiled StoreSwitcher with 5 tabs)
-bundle_src = f"{PROJECT_DIR}/preferences/.theos/obj/debug/StoreSwitcher.bundle"
+bundle_src = f"{PROJECT_DIR}/.theos/obj/debug/StoreSwitcher.bundle"
+if not os.path.exists(bundle_src):
+    bundle_src = f"{PROJECT_DIR}/preferences/.theos/obj/debug/StoreSwitcher.bundle"
 bundle_dst = f"{PKG_DIR}/var/jb/Library/PreferenceBundles/StoreSwitcher.bundle"
 for item in os.listdir(bundle_src):
     s = os.path.join(bundle_src, item)

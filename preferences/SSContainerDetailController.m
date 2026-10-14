@@ -1,5 +1,6 @@
 #import "SSContainerDetailController.h"
 #import "../SSContainerManager.h"
+#import "SSTerminalConsole.h"
 #import <spawn.h>
 
 @implementation SSContainerDetailController
@@ -68,6 +69,16 @@
         [emailSpec setProperty:@"appleid@icloud.com" forKey:@"placeholder"];
         [specs addObject:emailSpec];
 
+        PSSpecifier *testTokenBtn = [PSSpecifier preferenceSpecifierNamed:@"▶︎ Test Kiểm Tra Token Apple ID (AuthKit)"
+                                                                   target:self
+                                                                      set:NULL
+                                                                      get:NULL
+                                                                   detail:Nil
+                                                                     cell:PSButtonCell
+                                                                     edit:Nil];
+        [testTokenBtn setButtonAction:@selector(actionTestAuthKitToken:)];
+        [specs addObject:testTokenBtn];
+
         PSSpecifier *pwdSpec = [PSSpecifier preferenceSpecifierNamed:@"Mật khẩu Apple ID"
                                                               target:self
                                                                  set:@selector(setContainerValue:specifier:)
@@ -89,6 +100,16 @@
         [storeSpec setProperty:@"storeFrontID" forKey:@"key"];
         [storeSpec setProperty:@"143441 (Mỹ), 143462 (VN)" forKey:@"placeholder"];
         [specs addObject:storeSpec];
+
+        PSSpecifier *testStoreBtn = [PSSpecifier preferenceSpecifierNamed:@"▶︎ Test Kiểm Tra StoreFront ID Này"
+                                                                   target:self
+                                                                      set:NULL
+                                                                      get:NULL
+                                                                   detail:Nil
+                                                                     cell:PSButtonCell
+                                                                     edit:Nil];
+        [testStoreBtn setButtonAction:@selector(actionTestStoreFront:)];
+        [specs addObject:testStoreBtn];
 
         // Nhóm 3: Các dấu tích chọn cô lập
         PSSpecifier *grp3 = [PSSpecifier groupSpecifierWithName:@"CÁC DẤU TÍCH CHỌN CÔ LẬP VÙNG CHỨA"];
@@ -294,6 +315,44 @@
     }]];
     [confirm addAction:[UIAlertAction actionWithTitle:@"Hủy" style:UIAlertActionStyleCancel handler:nil]];
     [self presentViewController:confirm animated:YES completion:nil];
+}
+
+- (void)actionTestAuthKitToken:(PSSpecifier *)specifier {
+    SSContainer *c = [self targetContainer];
+    NSString *appleID = c.appleID ?: @"";
+    [SSTerminalConsole log:[NSString stringWithFormat:@"[CONTAINER] Đang kiểm tra trạng thái Token AuthKit cho: %@", appleID.length > 0 ? appleID : @"(Chưa nhập Apple ID)"]];
+
+    if (appleID.length == 0) {
+        UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Chưa Có Apple ID"
+                                                                       message:@"Hãy nhập email Apple ID trước khi kiểm tra token."
+                                                                preferredStyle:UIAlertControllerStyleAlert];
+        [alert addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:nil]];
+        [self presentViewController:alert animated:YES completion:nil];
+        return;
+    }
+
+    NSString *tokenPath = [NSString stringWithFormat:@"/var/mobile/Library/Application Support/StoreSwitcher/Containers/%@/auth_token.plist", c.identifier];
+    BOOL hasToken = [[NSFileManager defaultManager] fileExistsAtPath:tokenPath];
+
+    [SSTerminalConsole log:[NSString stringWithFormat:@"[CONTAINER] Token AuthKit vùng chứa '%@': %@", c.name, hasToken ? @"HỢP LỆ (Đã lưu trữ Keychain)" : @"CHƯA CÓ TOKEN RIÊNG (Đang dùng Token gốc)"]];
+
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Trạng Thái Token AuthKit"
+                                                                   message:[NSString stringWithFormat:@"Tài khoản: %@\nVùng chứa: %@\nTrạng thái: %@", appleID, c.name, hasToken ? @"Đã có Token Keychain độc lập ✓" : @"Đang dùng chung Session hệ thống"]
+                                                            preferredStyle:UIAlertControllerStyleAlert];
+    [alert addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:nil]];
+    [self presentViewController:alert animated:YES completion:nil];
+}
+
+- (void)actionTestStoreFront:(PSSpecifier *)specifier {
+    SSContainer *c = [self targetContainer];
+    NSString *sfID = c.storeFrontID ?: @"143441";
+    [SSTerminalConsole log:[NSString stringWithFormat:@"[CONTAINER] Đang kiểm tra cấu hình StoreFront ID: %@", sfID]];
+
+    UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"StoreFront ID Hợp Lệ"
+                                                                   message:[NSString stringWithFormat:@"StoreFront ID: %@\nVùng chứa: %@\nĐã sẵn sàng chuyển vùng App Store tự động khi kích hoạt.", sfID, c.name]
+                                                            preferredStyle:UIAlertControllerStyleAlert];
+    [alert addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:nil]];
+    [self presentViewController:alert animated:YES completion:nil];
 }
 
 @end

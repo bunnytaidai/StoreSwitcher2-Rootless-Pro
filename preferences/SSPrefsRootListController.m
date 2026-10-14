@@ -98,7 +98,22 @@
 }
 
 - (id)versionString {
-    return @"2.4.0 (5-Tab Pro Edition)";
+    return @"2.4.0 Pro Edition (Pinned Live Terminal)";
+}
+
+- (void)viewWillAppear:(BOOL)animated {
+    [super viewWillAppear:animated];
+    [SSTerminalConsole attachToViewController:self];
+}
+
+- (void)viewDidAppear:(BOOL)animated {
+    [super viewDidAppear:animated];
+    [SSTerminalConsole attachToViewController:self];
+}
+
+- (void)viewDidLayoutSubviews {
+    [super viewDidLayoutSubviews];
+    [SSTerminalConsole attachToViewController:self];
 }
 
 #pragma mark - Actions for the 4 Tabs
@@ -134,29 +149,7 @@
 }
 
 - (void)toggleLogDrawer:(PSSpecifier *)specifier {
-    self.logDrawerExpanded = !self.logDrawerExpanded;
-    
-    NSString *path = [self logFilePath];
-    NSString *content = [NSString stringWithContentsOfFile:path encoding:NSUTF8StringEncoding error:nil];
-    if (!content || content.length == 0) {
-        content = @"[OK] Hệ thống đang chạy ổn định. Chưa ghi nhận lỗi runtime.";
-    } else {
-        // Lấy 10 dòng cuối cùng
-        NSArray *lines = [content componentsSeparatedByCharactersInSet:[NSCharacterSet newlineCharacterSet]];
-        NSInteger start = MAX(0, (NSInteger)lines.count - 10);
-        NSArray *lastLines = [lines subarrayWithRange:NSMakeRange(start, lines.count - start)];
-        content = [lastLines componentsJoinedByString:@"\n"];
-    }
-
-    NSString *title = self.logDrawerExpanded ? @"📜 NHẬT KÝ ĐANG MỞ RỘNG" : @"📜 NHẬT KÝ ĐÃ THU GỌN";
-    UIAlertController *alert = [UIAlertController alertControllerWithTitle:title
-                                                                   message:content
-                                                            preferredStyle:UIAlertControllerStyleAlert];
-    [alert addAction:[UIAlertAction actionWithTitle:@"Mở Toàn Màn Hình" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
-        [self openLiveLogViewer:nil];
-    }]];
-    [alert addAction:[UIAlertAction actionWithTitle:@"Đóng" style:UIAlertActionStyleCancel handler:nil]];
-    [self presentViewController:alert animated:YES completion:nil];
+    [[SSTerminalConsole sharedConsole] toggleExpanded];
 }
 
 - (void)openLiveLogViewer:(PSSpecifier *)specifier {
@@ -165,8 +158,7 @@
 }
 
 - (void)clearLogFile:(PSSpecifier *)specifier {
-    NSString *path = [self logFilePath];
-    [@"" writeToFile:path atomically:YES encoding:NSUTF8StringEncoding error:nil];
+    [SSTerminalConsole clear];
 
     UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"Đã Xóa Log"
                                                                    message:@"Toàn bộ lịch sử nhật ký hoạt động đã được làm sạch."
