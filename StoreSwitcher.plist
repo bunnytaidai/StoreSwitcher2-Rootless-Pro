@@ -1,0 +1,16 @@
+{
+    Filter = {
+        Bundles = (
+            "com.apple.AppStore",
+            "com.apple.Preferences",
+            "com.apple.TestFlight",
+            "com.apple.StoreKit",
+            "com.apple.iBooks",
+            "com.apple.podcasts"
+        );
+        Executables = (
+            "itunesstored",
+            "akd"
+        );
+    };
+}

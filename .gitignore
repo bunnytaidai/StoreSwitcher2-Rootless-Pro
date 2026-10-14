@@ -1,0 +1,8 @@
+.theos/
+.theos*
+*.o
+*.obj
+*.mm
+dist/
+.DS_Store
+Thumbs.db

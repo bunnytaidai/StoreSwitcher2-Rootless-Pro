@@ -1,0 +1,10 @@
+{
+    Filter = {
+        Classes = (
+            "UIApplication"
+        );
+        Bundles = (
+            "com.apple.UIKit"
+        );
+    };
+}

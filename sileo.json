@@ -1,0 +1,16 @@
+{
+  "name": "StoreSwitcher Pro Repo",
+  "icon": "https://bunnytaidai.github.io/StoreSwitcher2-Rootless-Pro/CydiaIcon.png",
+  "description": "Kho tweak StoreSwitcher 2 Pro & AppAgent iOS 11 - 15.8.x Rootless / Rootful",
+  "tintColor": "#00E676",
+  "featured": {
+    "banners": [
+      {
+        "title": "StoreSwitcher 2 Pro & AppAgent",
+        "hideShadow": false,
+        "url": "https://bunnytaidai.github.io/StoreSwitcher2-Rootless-Pro/",
+        "package": "com.subdiox.storeswitcher2"
+      }
+    ]
+  }
+}

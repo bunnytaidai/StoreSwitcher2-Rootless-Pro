@@ -1,0 +1,23 @@
+Origin: StoreSwitcher Pro Repo
+Label: StoreSwitcher Pro
+Suite: stable
+Version: 2.3.0
+Codename: ios
+Architectures: iphoneos-arm64 iphoneos-arm
+Components: main
+Description: Official StoreSwitcher 2 Pro & AppAgent Repository by bunnytaidai
+MD5Sum:
+ a7971cff59ac4e7e93671b0bb270e71b 636 Packages
+ 838170dbd0ec5acc0f156c04841c26ad 450 Packages.gz
+ 3fe3f7b85810756bb1d617ad9d09d7f3 518 Packages.bz2
+ fa0486f341297cdf811fcee3f7f57e53 524 Packages.xz
+SHA1:
+ 36f6bfbff052486ab136aac8b55ddb2f748d0f6d 636 Packages
+ a8fecc1ae7d35ac8f5e9469935691358e991b172 450 Packages.gz
+ fff24ddde2f35f0403ff1468d66e9514340104c5 518 Packages.bz2
+ d19a8e8b9d811a1fc43e2a164d6bd9ce887b2eb5 524 Packages.xz
+SHA256:
+ 8570fecee25fd328eaeef2cf1c177d0f0b038115576bff50398d693eadfcc998 636 Packages
+ d7b76d842efcbfb54cc948e05e30e8917837b7bdc2e88516dc1755c288ca3773 450 Packages.gz
+ c9008185206451bed45f3d2f66782a354762530fe60b42871a46833af5dff053 518 Packages.bz2
+ e25c6ce26c24b72a65c38423ae48829c5b259f5a450bb615fb4c943a51f60e18 524 Packages.xz
