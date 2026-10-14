@@ -1,6 +1,6 @@
 Package: com.subdiox.storeswitcher2
 Name: StoreSwitcher 2 Pro & AppAgent
-Depends: firmware (>= 11.0), mobilesubstrate
+Depends: firmware (>= 11.0), mobilesubstrate (>= 0.9.5000) | ellekit, preferenceloader
 Description: Quick Apple ID Switcher, Sandbox In-App Manager, Live URL Sniffer, Objective-C Runtime Inspector & IPC Agent for iOS 11 - 15.8.x.
 Maintainer: bunnytaidai
 Author: bunnytaidai & subdiox
@@ -9,8 +9,8 @@ Architecture: iphoneos-arm64
 Version: 2.3.0
 Installed-Size: 748
 Filename: debs/com.subdiox.storeswitcher2_2.3.0_iphoneos-arm64.deb
-Size: 80748
-MD5sum: 4b09c1853d710897ebe25d68382cbc03
-SHA1: 108530caa0f7b665cb7a03f052070ad0ab861fb9
-SHA256: 01813d493afe0ba6996049c85cbfa4779a1e88af66dac54dfb5fa362b902057a
+Size: 81176
+MD5sum: 4a8ba705d0d085e6b445d67eaaaaacc2
+SHA1: 1d6924e8d3ecee18560cf8aeea4e2d3afd79b84a
+SHA256: bbfa24611848ee843c2c92690f60456ff5c42b4ad1cf1f5ab8aa49fdf7ce62c8
 

@@ -7,17 +7,17 @@ Architectures: iphoneos-arm64 iphoneos-arm
 Components: main
 Description: Official StoreSwitcher 2 Pro & AppAgent Repository by bunnytaidai
 MD5Sum:
- a7971cff59ac4e7e93671b0bb270e71b 636 Packages
- 838170dbd0ec5acc0f156c04841c26ad 450 Packages.gz
- 3fe3f7b85810756bb1d617ad9d09d7f3 518 Packages.bz2
- fa0486f341297cdf811fcee3f7f57e53 524 Packages.xz
+ de3d0503eb11630ac4c03b792035c2ef 678 Packages
+ ad6f300dae3cf9319518cae50a070561 477 Packages.gz
+ 6cdf8989b77482a3c36a9d83d355ef87 544 Packages.bz2
+ be06b6c1da068e32113e36f644c6eb84 552 Packages.xz
 SHA1:
- 36f6bfbff052486ab136aac8b55ddb2f748d0f6d 636 Packages
- a8fecc1ae7d35ac8f5e9469935691358e991b172 450 Packages.gz
- fff24ddde2f35f0403ff1468d66e9514340104c5 518 Packages.bz2
- d19a8e8b9d811a1fc43e2a164d6bd9ce887b2eb5 524 Packages.xz
+ e71b194a2ff07639184fbd0ab2a1720abf7fb98a 678 Packages
+ 6df5421507d07c49fbc33d6671d645b6398dcdbf 477 Packages.gz
+ 8700a67c973f9ae10177998bef21593648f2bd2e 544 Packages.bz2
+ 72d44dfc7b437e29de97f39ddc1137deecca73fa 552 Packages.xz
 SHA256:
- 8570fecee25fd328eaeef2cf1c177d0f0b038115576bff50398d693eadfcc998 636 Packages
- d7b76d842efcbfb54cc948e05e30e8917837b7bdc2e88516dc1755c288ca3773 450 Packages.gz
- c9008185206451bed45f3d2f66782a354762530fe60b42871a46833af5dff053 518 Packages.bz2
- e25c6ce26c24b72a65c38423ae48829c5b259f5a450bb615fb4c943a51f60e18 524 Packages.xz
+ d54c5e96ee756f93632236fc81e6f5e368f870d212f9e3448161aa95ad022e8b 678 Packages
+ 2f8b449673b951ca4dc2729948e81f6c307fbda041d4853e239b416ceeee03c3 477 Packages.gz
+ b7a53507efcc0edb844debee686b3ab2312307da6eb38dd85b7df8136ce30420 544 Packages.bz2
+ 149a241196c20c745e9403d17b8cff0dc6a7a689742d6da399c6e10164237055 552 Packages.xz

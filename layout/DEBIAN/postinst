@@ -1,0 +1,23 @@
+#!/bin/sh
+set -e
+
+# Đặt quyền thực thi cho binary và dylib
+if [ -f /var/jb/usr/bin/agentcli ]; then
+    chmod 0755 /var/jb/usr/bin/agentcli || true
+fi
+
+if [ -f /usr/bin/agentcli ]; then
+    chmod 0755 /usr/bin/agentcli || true
+fi
+
+# Chạy uicache nếu có để cập nhật icon
+if [ -x /var/jb/usr/bin/uicache ]; then
+    /var/jb/usr/bin/uicache -a || true
+elif [ -x /usr/bin/uicache ]; then
+    /usr/bin/uicache -a || true
+fi
+
+# Làm mới AppStore và SpringBoard để nạp tweak ngay lập tức
+killall -9 AppStore 2>/dev/null || true
+
+exit 0

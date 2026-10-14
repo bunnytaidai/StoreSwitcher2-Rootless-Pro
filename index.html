@@ -7,7 +7,7 @@
     <style>
         :root {
             --bg-primary: #0a0e17;
-            --bg-card: rgba(22, 30, 49, 0.7);
+            --bg-card: rgba(22, 30, 49, 0.75);
             --border-color: rgba(0, 230, 118, 0.25);
             --accent-green: #00e676;
             --accent-glow: rgba(0, 230, 118, 0.35);
@@ -35,7 +35,7 @@
         }
 
         .container {
-            max-width: 580px;
+            max-width: 600px;
             width: 100%;
             display: flex;
             flex-direction: column;
@@ -64,7 +64,6 @@
         h1 {
             font-size: 22px;
             font-weight: 700;
-            letter-spacing: -0.5px;
             margin-bottom: 6px;
             color: var(--accent-green);
         }
@@ -75,10 +74,24 @@
             line-height: 1.5;
         }
 
-        .btn-group {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
+        .repo-url-box {
+            background: #05080e;
+            border: 1px dashed rgba(0, 230, 118, 0.5);
+            border-radius: 12px;
+            padding: 12px 14px;
+            font-family: monospace;
+            font-size: 13px;
+            color: var(--accent-green);
+            text-align: center;
+            word-break: break-all;
+            user-select: all;
+            margin: 16px 0;
+        }
+
+        .btn-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
             margin-top: 10px;
         }
 
@@ -86,14 +99,17 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
-            padding: 14px 20px;
+            gap: 8px;
+            padding: 13px 16px;
             border-radius: 14px;
-            font-size: 15px;
+            font-size: 14.5px;
             font-weight: 600;
             text-decoration: none;
             transition: all 0.2s ease;
-            border: 1px solid transparent;
+        }
+
+        .btn-full {
+            grid-column: span 2;
         }
 
         .btn-sileo {
@@ -102,9 +118,10 @@
             box-shadow: 0 4px 15px rgba(43, 122, 251, 0.35);
         }
 
-        .btn-sileo:hover {
-            background: #1b6af0;
-            transform: translateY(-2px);
+        .btn-saily {
+            background: linear-gradient(135deg, #ff5252, #ff793f);
+            color: #ffffff;
+            box-shadow: 0 4px 15px rgba(255, 82, 82, 0.35);
         }
 
         .btn-zebra {
@@ -113,23 +130,24 @@
             border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
-        .btn-zebra:hover {
-            background: #262635;
-            transform: translateY(-2px);
+        .btn-cydia {
+            background: #684824;
+            color: #ffffff;
         }
 
         .btn-download {
             background: rgba(0, 230, 118, 0.15);
             color: var(--accent-green);
             border: 1px solid var(--accent-green);
+            box-shadow: 0 4px 15px rgba(0, 230, 118, 0.2);
         }
 
-        .btn-download:hover {
-            background: rgba(0, 230, 118, 0.25);
+        .btn:hover {
             transform: translateY(-2px);
+            filter: brightness(1.1);
         }
 
-        .feature-card {
+        .card {
             background: var(--bg-card);
             backdrop-filter: blur(16px);
             border: 1px solid rgba(255, 255, 255, 0.08);
@@ -137,51 +155,56 @@
             padding: 20px;
         }
 
-        .feature-title {
+        .card-title {
             font-size: 15px;
             font-weight: 700;
             margin-bottom: 12px;
+            color: var(--accent-green);
             display: flex;
             align-items: center;
             gap: 8px;
-            color: var(--accent-green);
         }
 
-        ul.features {
+        ul.list-steps {
             list-style: none;
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 12px;
             font-size: 13.5px;
             color: #cfd8dc;
         }
 
-        ul.features li {
+        ul.list-steps li {
             position: relative;
-            padding-left: 20px;
-            line-height: 1.45;
+            padding-left: 24px;
+            line-height: 1.5;
         }
 
-        ul.features li::before {
-            content: "✓";
+        ul.list-steps li span.step-num {
             position: absolute;
             left: 0;
+            top: 2px;
+            width: 18px;
+            height: 18px;
+            background: rgba(0, 230, 118, 0.2);
             color: var(--accent-green);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
             font-weight: bold;
         }
 
-        .repo-url-box {
+        .code-box {
             background: #05080e;
-            border: 1px dashed rgba(0, 230, 118, 0.4);
-            border-radius: 12px;
-            padding: 12px 14px;
+            padding: 10px 12px;
+            border-radius: 10px;
             font-family: monospace;
             font-size: 12.5px;
-            color: var(--accent-green);
-            text-align: center;
-            word-break: break-all;
-            user-select: all;
+            color: #00e676;
             margin-top: 6px;
+            user-select: all;
         }
 
         footer {
@@ -195,7 +218,7 @@
 <body>
     <div class="container">
         <div class="header-card">
-            <img src="CydiaIcon.png" alt="Logo" class="logo" onerror="this.src='https://via.placeholder.com/72?text=SS2'">
+            <img src="CydiaIcon.png" alt="Logo" class="logo">
             <h1>StoreSwitcher 2 Pro & AppAgent</h1>
             <p class="desc">Kho lưu trữ APT chính thức hỗ trợ iOS 11 - 15.8.x Rootless (Dopamine/Palera1n) & Rootful trên iPhone 6s A9 trở lên.</p>
             
@@ -203,37 +226,70 @@
                 https://bunnytaidai.github.io/StoreSwitcher2-Rootless-Pro/
             </div>
 
-            <div class="btn-group">
+            <div class="btn-grid">
                 <a href="sileo://source/https://bunnytaidai.github.io/StoreSwitcher2-Rootless-Pro/" class="btn btn-sileo">
                     <span>⚡ Thêm vào Sileo</span>
+                </a>
+                <a href="saily://add-source?url=https://bunnytaidai.github.io/StoreSwitcher2-Rootless-Pro/" class="btn btn-saily">
+                    <span>⛵ Thêm vào Saily</span>
                 </a>
                 <a href="zbra://sources/add/https://bunnytaidai.github.io/StoreSwitcher2-Rootless-Pro/" class="btn btn-zebra">
                     <span>🦓 Thêm vào Zebra</span>
                 </a>
-                <a href="debs/com.subdiox.storeswitcher2_2.3.0_iphoneos-arm64.deb" class="btn btn-download">
-                    <span>⬇️ Tải file .deb v2.3.0 Trực Tiếp</span>
+                <a href="cydia://url/https://cydia.saurik.com/api/share#?source=https://bunnytaidai.github.io/StoreSwitcher2-Rootless-Pro/" class="btn btn-cydia">
+                    <span>📦 Thêm vào Cydia</span>
+                </a>
+                <a href="debs/com.subdiox.storeswitcher2_2.3.0_iphoneos-arm64.deb" class="btn btn-download btn-full">
+                    <span>⬇️ Tải file .deb v2.3.0 Cài Đặt Bằng Filza</span>
                 </a>
             </div>
         </div>
 
-        <div class="feature-card">
-            <div class="feature-title">
-                <span>🔥 Tính năng nổi bật v2.3.0</span>
+        <div class="card">
+            <div class="card-title">
+                <span>📁 Hướng dẫn cài đặt file .deb bằng Filza</span>
             </div>
-            <ul class="features">
-                <li><strong>AppAgent.dylib</strong>: Tiêm tự động vào app UIKit, giao tiếp IPC hai chiều tức thì với Tweak.</li>
-                <li><strong>StoreKit / IAP Sandbox Sniffer</strong>: Bắt gói mua in-app, lấy Receipt Base64 và Replay giao dịch.</li>
-                <li><strong>Deeplink & Scheme Hook</strong>: Bắt URL Scheme 2 chiều (Incoming / Outgoing) và ép mở URL từ xa.</li>
-                <li><strong>Network API Hook</strong>: Bắt HTTP/HTTPS API, Request Body, Response Data và cho phép sửa / gửi lại.</li>
-                <li><strong>Runtime Inspector</strong>: Quét Class, Methods, Properties và thực thi hàm Objective-C động.</li>
-                <li><strong>UI Controller & Floating HUD</strong>: Bấm nút từ xa, nhập text, dump UI và bật cửa sổ nổi Sniffer trên màn hình app.</li>
-                <li><strong>Terminal CLI (`agentcli`)</strong>: Điều khiển toàn bộ tính năng qua dòng lệnh Terminal SSH/NewTerm.</li>
-                <li><strong>Không lỗi phụ thuộc</strong>: Cấu hình dependencies tiêu chuẩn (firmware &gt;= 11.0, mobilesubstrate/ellekit).</li>
+            <ul class="list-steps">
+                <li>
+                    <span class="step-num">1</span>
+                    Bấm vào nút <strong>"Tải file .deb v2.3.0"</strong> ở trên bằng Safari trên iPhone.
+                </li>
+                <li>
+                    <span class="step-num">2</span>
+                    Sau khi tải xong, chọn <strong>Mở trong "Filza"</strong> (Open in Filza).
+                </li>
+                <li>
+                    <span class="step-num">3</span>
+                    Chạm vào file <code>com.subdiox.storeswitcher2_2.3.0_iphoneos-arm64.deb</code> trong Filza, chọn <strong>Cài đặt (Install)</strong> ở góc trên bên phải.
+                </li>
+                <li>
+                    <span class="step-num">4</span>
+                    Filza tự động chạy script <code>postinst</code> và thoát với mã <code>Mã thoát: 0</code> (Success).
+                </li>
+                <li>
+                    <span class="step-num">5</span>
+                    Bấm <strong>Khởi động lại SpringBoard</strong> (Respring) là tweak và dylib đã kích hoạt hoàn tất!
+                </li>
             </ul>
         </div>
 
+        <div class="card">
+            <div class="card-title">
+                <span>🛡️ Cấu hình gói phụ thuộc (Dependencies)</span>
+            </div>
+            <p style="font-size: 13px; color: #b0bec5; line-height: 1.5; margin-bottom: 10px;">
+                Gói cài đặt yêu cầu các thành phần nền tảng để đảm bảo tweak hoạt động 100% không lỗi văng app:
+            </p>
+            <div class="code-box">
+                Depends: firmware (>= 11.0), mobilesubstrate (>= 0.9.5000) | ellekit, preferenceloader
+            </div>
+            <p style="font-size: 12px; color: #78909c; margin-top: 8px;">
+                * Khi cài qua Sileo/Saily, hệ thống sẽ tự động đối chiếu và kéo các gói phụ thuộc tương ứng (ElleKit trên Dopamine).
+            </p>
+        </div>
+
         <footer>
-            Phát triển bởi <strong>bunnytaidai & subdiox</strong> • 2026
+            Kho lưu trữ chính thức của <strong>bunnytaidai & subdiox</strong> • 2026
         </footer>
     </div>
 </body>
